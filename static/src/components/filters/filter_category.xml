@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates>
+	<t t-name="universal_dashboard.FilterCategory">
+		<Dropdown>
+			<button class="btn btn-secondary">
+				<i class="fa fa-th-large me-1" />
+				<span>
+					Category
+				</span>
+			</button>
+			<t t-set-slot="content">
+                <DropdownItem>
+                    All
+                </DropdownItem>
+				<DropdownItem>
+					Product
+				</DropdownItem>
+				<DropdownItem>
+					Service
+				</DropdownItem>
+                <DropdownItem>
+                    Region
+                </DropdownItem>
+			</t>
+		</Dropdown>
+	</t>
+</templates>

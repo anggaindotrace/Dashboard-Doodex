@@ -1,51 +1,69 @@
 /** @odoo-module **/
 
+import { _t } from "@web/core/l10n/translation";
 import { Component, useState, onWillStart } from "@odoo/owl";
+import { DateTimeInput } from '@web/core/datetime/datetime_input';
+import { Dropdown } from "@web/core/dropdown/dropdown";
+import { DropdownItem } from "@web/core/dropdown/dropdown_item";
+import { MultiRecordSelector } from "@web/core/record_selectors/multi_record_selector";
+import { DashboardController } from "../controller";
 
-export class GlobalFilters extends Component {
+const { DateTime } = luxon;
+
+export class DashboardFilters extends Component {
+    static template = "universal_dashboard.DashboardFilters";
+    static props = {};
+    static components = {
+        DateTimeInput,
+        Dropdown,
+        DropdownItem,
+        MultiRecordSelector,
+    };
+
     setup() {
-        this.state = useState({
-          selectedPeriod: "2",
-          periodOptions: [
-            { id: "0", name: "Today" },
-            { id: "1", name: "This Week" },
-            { id: "2", name: "This Month" },
-            { id: "3", name: "This Quarter" },
-            { id: "4", name: "This Financial Year" },
-            { id: "5", name: "Last Month" },
-            { id: "6", name: "Last Quarter" },
-            { id: "7", name: "Last Financial Year" },
-            { id: "8", name: "Date Range" },
-          ],
-        });
+        this.controller = useState(new DashboardController())
     }
 
-    toggleDropdown(type) {
-        const dropdowns = [
-            'period',
-        ];
-
-        dropdowns.forEach((dropdown) => {
-            const dropdownKey = `show${dropdown.charAt(0).toUpperCase() + dropdown.slice(1)}Dropdown`;
-            if (type === dropdown) {
-                this.state[dropdownKey] = !this.state[dropdownKey];
-            } else {
-                this.state[dropdownKey] = false;
-            }
-        });
+    //------------------------------------------------------------------------------------------------------------------
+    // Helpers
+    //------------------------------------------------------------------------------------------------------------------
+    handleDateFromChange(value){
+        this.setDateFrom(value)
     }
 
-    handleDropdownClick = (type) => {
-        this.toggleDropdown(type);
+    handleDateToChange(value){
+        debugger;
+        this.setDateTo(value)
     }
 
-    onClickPeriod = () => this.handleDropdownClick('period');
+    handleDateFilterChange(filter){
+        debugger;
+        console.log(this.controller)
+        // this.setDateFilter(filter)
+    }
 
-    selectPeriod = (periodId) => {
-        this.state.selectedPeriod = periodId;
-        this.state.showPeriodDropdown = false;
-        this.props.onPeriodChange(periodId);  // Notify parent component
+    //------------------------------------------------------------------------------------------------------------------
+    // Dates
+    //------------------------------------------------------------------------------------------------------------------
+    // Getters
+    dateFrom(){
+        return DateTime.fromISO(this.controller.options.date.date_from)
+    }
+
+    dateTo(){
+        return DateTime.fromISO(this.controller.options.date.date_to)
+    }
+
+    //setters
+    setDateFrom(dateFrom){
+        this.controller.setDateFrom(dateFrom.toISODate())
+    }
+
+    setDateTo(dateTo){
+        this.controller.setDateTo(dateTo.toISODate())
+    }
+
+    setDateFilter(filter){
+        // this.controller.setDateFilter(filter)
     }
 }
-
-GlobalFilters.template = 'GlobalFilters';

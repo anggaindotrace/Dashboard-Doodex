@@ -1,8 +1,12 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <templates id="dashboard_homepage" xml:space="preserve">
-    <t t-name="DashboardHomepage">
-      <div class="navbar-custom navbar-expand-md navbar-light mb-4 navbar-style border-bottom" role="navigation">
-        <GlobalFilters action="props.action" onPeriodChange.bind="updatePeriod"/>
-      </div>
-    </t>
+	<t t-name="DashboardHomepage">
+		<ControlPanel>
+			<t t-set-slot="layout-actions">
+				<div class="d-flex gap-1 flex-wrap">
+					<DashboardFilters />
+				</div>
+			</t>
+		</ControlPanel>
+	</t>
 </templates>

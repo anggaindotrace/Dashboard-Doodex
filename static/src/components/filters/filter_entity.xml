@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates>
+	<t t-name="universal_dashboard.FilterEntity">
+		<Dropdown>
+			<button class="btn btn-secondary">
+				<i class="fa fa-puzzle-piece me-1" />
+				<span>
+					Entity
+				</span>
+			</button>
+			<t t-set-slot="content">
+                <DropdownItem class="{'selected': true}">
+                    All
+                </DropdownItem>
+				<DropdownItem>
+					Warehouse
+				</DropdownItem>
+				<DropdownItem>
+					Supplier
+				</DropdownItem>
+                <DropdownItem>
+                    Salesperson
+                </DropdownItem>
+			</t>
+		</Dropdown>
+	</t>
+</templates>

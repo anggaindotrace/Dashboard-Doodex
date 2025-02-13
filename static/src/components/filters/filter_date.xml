@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates>
+	<t t-name="universal_dashboard.FilterDate">
+		<Dropdown>
+			<button class="btn btn-secondary">
+				<i class="fa fa-calendar me-1" />
+				<t t-out="controller.options.date.string"/>
+			</button>
+			<t t-set-slot="content">
+				<DropdownItem class="{'selected': controller.options.date.filter === 'this_month'}" onSelected.bind="handleDateFilterChange('this_month')">
+					This Month
+				</DropdownItem>
+				<DropdownItem class="{'selected': controller.options.date.filter === 'this_quarter'}" onSelected.bind="handleDateFilterChange('this_quarter')">
+					This Quarter
+				</DropdownItem>
+				<DropdownItem class="{'selected': controller.options.date.filter === 'this_year'}"	>
+					This Financial Year
+				</DropdownItem>
+				<div class="dropdown-divider"/>
+				<DropdownItem class="{'selected': controller.options.date.filter === 'last_month'}">
+					Last Month
+				</DropdownItem>
+				<DropdownItem class="{'selected': controller.options.date.filter === 'last_quarter'}">
+					Last Quarter
+				</DropdownItem>
+				<DropdownItem class="{'selected': controller.options.date.filter === 'last_year'}">
+					Last Financial Year
+				</DropdownItem>
+				<div class="dropdown-divider"/>
+				<div class="dropdown-item date d-flex flex-row justify-space-between">
+					<div class="d-flex flex-row gap-2">
+						<label class="d-flex align-items-center">
+							From
+						</label>
+						<DateTimeInput type="'date'" value="dateFrom()" onChange.bind="handleDateFromChange"/>
+						<label class="d-flex align-items-center">
+							to
+						</label>
+						<DateTimeInput type="'date'" value="dateTo()" onChange.bind="handleDateToChange"/>
+						<button class="btn btn-sm btn-primary">Apply</button>
+					</div>
+				</div>
+			</t>
+		</Dropdown>
+	</t>
+</templates>

@@ -1,24 +1,14 @@
 <?xml version='1.0' encoding='utf-8'?>
 <templates xml:space="preserve">
-    <t t-name="GlobalFilters">
-        <div class="navbar-left">
-            <div class="dropdown">
-                <button class="btn dropdown-add-items-no-uppercase dropdown-toggle"
-                    type="button" id="dropdownPeriodButton"
-                    data-toggle="dropdown" aria-haspopup="true"
-                    aria-expanded="false"
-                    t-on-click="onClickPeriod">
-                    <span id="text_add"><t t-esc="state.periodOptions.find(period => period.id === state.selectedPeriod)?.name || 'Select Period'"/></span>
-                </button>
-                <div class="dropdown-menu-filter menuPeriod" t-att-class="{ 'show': state.showPeriodDropdown }" aria-labelledby="dropdownPeriodButton">
-                    <t t-foreach="state.periodOptions" t-as="period" t-key="period.id">
-                        <a class="dropdown-item" t-att-class="{ 'selected': state.selectedPeriod === period.id }"
-                        t-on-click="() => selectPeriod(period.id)">
-                            <t t-esc="period.name"/>
-                        </a>
-                    </t>
-                </div>
-            </div>
+    <t t-name="universal_dashboard.DashboardFilters">
+        <div class="filter_date" id="filter_date">
+            <t t-call="universal_dashboard.FilterDate"/>
+        </div>
+        <div class="filter_category" id="filter_category">
+            <t t-call="universal_dashboard.FilterCategory"/>
+        </div>
+        <div class="filter_entity" id="filter_entity">
+            <t t-call="universal_dashboard.FilterEntity"/>
         </div>
     </t>
 </templates>
