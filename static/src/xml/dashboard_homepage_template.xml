@@ -13,13 +13,17 @@
 				<div class="mx-3 my-3">
 					<div class="card-body">
 						<div class="d-flex gap-3 mb-0 mb-md-3 mx-2">
-							<KPI name="'Total Turnover'" value="10000" percentage="10" />
-							<KPI name="'Total Turnover'" value="10000" percentage="-10" />
-							<KPI name="'Total Turnover'" value="10000" percentage="10" />
+							<KPI name="'Total Revenue'" value="'€8,500'" percentage="10" />
+							<KPI name="'BFR'" value="'€15,000'" percentage="-10" />
+						</div>
+						<div class="d-flex gap-3 mb-0 mb-md-3 mx-2">
+							<KPI name="'Gross Margin'" value="'100%'" percentage="10" />
+							<KPI name="'Net Margin'" value="'13%'" percentage="10" />
+							<KPI name="'Return on Investment'" value="'15%'" percentage="10" />
 						</div>
 						<div class="d-flex gap-3 mt-3 mx-2">
-							<KPI name="'Total Turnover'" value="10000" percentage="10" />
-							<KPI name="'Total Turnover'" value="10000" percentage="-10" />
+							<KPI name="'Total Stock Value'" value="'€6,159,923'" percentage="10" />
+							<KPI name="'Number of CRM Opportunities'" value="'€6,159'" percentage="-10" />
 						</div>
 						<div class="d-flex mt-3 mb-0 mb-md-3 mx-2">
 							<div style="width: 100%; height: auto;">

@@ -17,11 +17,11 @@
                 </t>
             </div>
             <div class="d-flex flex-column gap-1" style="width: 100%; height: auto;">
-                <span class="text-dark fw-bold fs-1">
+                <span class="text-gray fw-bold fs-1">
                     <t t-out="props.value"/>
                 </span>
                 <div class="d-flex align-items-center justify-content-between">
-                    <span class="text-dark fs-4">
+                    <span class="text-muted fs-4">
                         <t t-out="props.name"/>
                     </span>
                     <span class="fw-bold fs-4" t-att-class="props.percentage > 0 ? 'text-green' : 'text-red'">
