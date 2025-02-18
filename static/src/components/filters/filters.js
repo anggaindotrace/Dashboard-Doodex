@@ -22,6 +22,9 @@ export class DashboardFilters extends Component {
 
     setup() {
         this.controller = useState(new DashboardController())
+        if(this.props.onFilterChange){
+            this.props.onFilterChange(this.controller);
+        }
     }
 
     //------------------------------------------------------------------------------------------------------------------
@@ -29,17 +32,37 @@ export class DashboardFilters extends Component {
     //------------------------------------------------------------------------------------------------------------------
     handleDateFromChange(value){
         this.setDateFrom(value)
+        if (this.props.onFilterChange) {
+            this.props.onFilterChange(this);
+        }
     }
 
     handleDateToChange(value){
-        debugger;
         this.setDateTo(value)
+        if (this.props.onFilterChange) {
+            this.props.onFilterChange(this);
+        }
     }
 
     handleDateFilterChange(filter){
-        debugger;
-        console.log(this.controller)
-        // this.setDateFilter(filter)
+        this.controller.updateOption('date', filter);
+        if (this.props.onFilterChange) {
+            this.props.onFilterChange(this);
+        }
+    }
+
+    handleCategoryChange(category){
+        this.controller.updateOption('category', category);
+        if (this.props.onFilterChange) {
+            this.props.onFilterChange(this);
+        }
+    }
+
+    handleEntityChange(entity){
+        this.controller.updateOption('entity', entity);
+        if (this.props.onFilterChange) {
+            this.props.onFilterChange(this);
+        }
     }
 
     //------------------------------------------------------------------------------------------------------------------

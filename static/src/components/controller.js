@@ -16,7 +16,9 @@ export class DashboardController{
                 date_to: initialOptions.date_to || DateTime.now().toISODate(),
                 period_type: 'month',
                 period: 0
-            }
+            },
+            category:  initialOptions.category || 'all',
+            entity: initialOptions.entity || 'all',
         };
         this.initDateFilters(this.options.date.filter);
     }
@@ -173,8 +175,20 @@ export class DashboardController{
         return this.options.date.string;
     }
 
-    setDateFilter(filter){
-        this.options.date.filter = filter
-        this.initDateFilters(filter)
+    async _updateOption(optionKey, optionValue){
+        let currentOption = null;
+        let option = this.options;
+
+        if(optionKey === 'date'){
+            option.date.filter = optionValue;
+            this.initDateFilters(optionValue);
+            this.updateDateString();
+        } else {
+            option[optionKey] = optionValue;
+        }
+    }
+
+    async updateOption(optionKey, optionValue){
+        await this._updateOption(optionKey, optionValue);
     }
 }

@@ -9,16 +9,16 @@
 				</span>
 			</button>
 			<t t-set-slot="content">
-                <DropdownItem class="{'selected': true}">
+                <DropdownItem class="{'selected': controller.options.entity === 'all'}" onSelected="() => this.handleEntityChange('all')">
                     All
                 </DropdownItem>
-				<DropdownItem>
+				<DropdownItem class="{'selected': controller.options.entity === 'warehouse'}" onSelected="() => this.handleEntityChange('warehouse')">
 					Warehouse
 				</DropdownItem>
-				<DropdownItem>
+				<DropdownItem class="{'selected': controller.options.entity === 'supplier'}" onSelected="() => this.handleEntityChange('supplier')">
 					Supplier
 				</DropdownItem>
-                <DropdownItem>
+                <DropdownItem class="{'selected': controller.options.entity === 'salesperson'}" onSelected="() => this.handleEntityChange('salesperson')">
                     Salesperson
                 </DropdownItem>
 			</t>

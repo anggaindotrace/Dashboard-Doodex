@@ -4,9 +4,64 @@
 		<ControlPanel>
 			<t t-set-slot="layout-actions">
 				<div class="d-flex gap-1 flex-wrap">
-					<DashboardFilters />
+					<DashboardFilters onFilterChange.bind="onFilterChange" />
 				</div>
 			</t>
 		</ControlPanel>
+		<div class="next-dashboard">
+			<div class="py-3" t-ref="root">
+				<div class="mx-3 my-3">
+					<div class="card-body">
+						<div class="d-flex gap-3 mb-0 mb-md-3 mx-2">
+							<KPI name="'Total Turnover'" value="10000" percentage="10" />
+							<KPI name="'Total Turnover'" value="10000" percentage="-10" />
+							<KPI name="'Total Turnover'" value="10000" percentage="10" />
+						</div>
+						<div class="d-flex gap-3 mt-3 mx-2">
+							<KPI name="'Total Turnover'" value="10000" percentage="10" />
+							<KPI name="'Total Turnover'" value="10000" percentage="-10" />
+						</div>
+						<div class="d-flex mt-3 mb-0 mb-md-3 mx-2">
+							<div style="width: 100%; height: auto;">
+								<div>
+									<span class="fs-2 fw-bold">
+										Sales and Purchase Evolution
+									</span>
+								</div>
+								<div id="sales_purchase_evolution" style="width: 100%; height: 300px;" />
+							</div>
+						</div>
+						<div class="d-flex mb-0 mb-md-3 mx-2">
+							<div style="width: 100%; height: auto;">
+								<div>
+									<span class="fs-2 fw-bold">
+										Stock, CRM distribution and BFR
+									</span>
+								</div>
+								<div id="distribution" style="width: 100%; height: 300px;" />
+							</div>
+						</div>
+						<div class="d-flex gap-3 mt-3 mx-2">
+							<div style="width: 50%; height: 525px;">
+								<div>
+									<span class="fs-2 fw-bold">
+										Category Breakdown
+									</span>
+								</div>
+								<div id="category_breakdown" style="width: 100%; height: 450px;" />
+							</div>
+							<div style="width: 50%; height: 500px;">
+								<div>
+									<span class="fs-2 fw-bold">
+										Monetary Flow
+									</span>
+								</div>
+								<div id="monetary_flow" style="width: 100%; height: 450px;" />
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
 	</t>
 </templates>

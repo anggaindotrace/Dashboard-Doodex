@@ -9,5 +9,7 @@ class UniversalDashboard(models.Model):
         """
             Get All Data for KPI Card
         """
-        #get user id
-        pass
+        #GET TOTAL REVENUE
+        query = """
+            SELECT SUM(total_amount) FROM sale_order
+        """

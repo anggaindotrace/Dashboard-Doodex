@@ -9,16 +9,16 @@
 				</span>
 			</button>
 			<t t-set-slot="content">
-                <DropdownItem>
+                <DropdownItem class="{'selected': controller.options.category === 'all'}" onSelected="() => this.handleCategoryChange('all')">
                     All
                 </DropdownItem>
-				<DropdownItem>
+				<DropdownItem class="{'selected': controller.options.category === 'product'}" onSelected="() => this.handleCategoryChange('product')">
 					Product
 				</DropdownItem>
-				<DropdownItem>
+				<DropdownItem class="{'selected': controller.options.category === 'service'}" onSelected="() => this.handleCategoryChange('service')">
 					Service
 				</DropdownItem>
-                <DropdownItem>
+                <DropdownItem class="{'selected': controller.options.category === 'region'}" onSelected="() => this.handleCategoryChange('region')"	>
                     Region
                 </DropdownItem>
 			</t>

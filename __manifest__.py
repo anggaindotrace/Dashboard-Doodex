@@ -15,7 +15,7 @@
     'sequence': -1,
 
     # any module necessary for this one to work correctly
-    'depends': ['base', 'crm', 'sale', 'account', 'stock', 'purchase', 'account_reports'],
+    'depends': ['base', 'crm', 'sale_management', 'account', 'stock', 'purchase', 'account_reports'],
 
     # always loaded
     'data': [
