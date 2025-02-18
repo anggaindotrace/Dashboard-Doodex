@@ -12,7 +12,12 @@ const { DateTime } = luxon;
 
 export class DashboardFilters extends Component {
     static template = "universal_dashboard.DashboardFilters";
-    static props = {};
+    static props = {
+        onFilterChange: {
+            type: Function,
+            required: true
+        }
+    };
     static components = {
         DateTimeInput,
         Dropdown,

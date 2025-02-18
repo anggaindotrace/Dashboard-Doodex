@@ -18,91 +18,110 @@ export class Graph{
     }
 
     async renderLineCharts() {
-        const root = await this.initChart("#sales_purchase_evolution");
-        var chart = root.container.children.push(am5xy.XYChart.new(root, {
-            panX: true,
-            panY: true,
-            wheelX: "panX",
-            wheelY: "zoomX",
-            pinchZoomX:true,
-            paddingLeft: 0
-          }));
-          
-          
-          // Add cursor
-          // https://www.amcharts.com/docs/v5/charts/xy-chart/cursor/
-          var cursor = chart.set("cursor", am5xy.XYCursor.new(root, {
-            behavior: "none"
-          }));
-          cursor.lineY.set("visible", false);
-          
-          
-          // Generate random data
-          var date = new Date();
-          date.setHours(0, 0, 0, 0);
-          var value = 100;
-          
-          function generateData() {
-            value = Math.round((Math.random() * 10 - 5) + value);
-            am5.time.add(date, "day", 1);
-            return {
-              date: date.getTime(),
-              value: value
-            };
+      const root = await this.initChart("#sales_purchase_evolution");
+      var chart = root.container.children.push(am5xy.XYChart.new(root, {
+          panX: true,
+          panY: true,
+          wheelX: "panX",
+          wheelY: "zoomX",
+          pinchZoomX:true,
+          paddingLeft: 0
+        }));
+        
+        
+        // Add cursor
+        // https://www.amcharts.com/docs/v5/charts/xy-chart/cursor/
+        var cursor = chart.set("cursor", am5xy.XYCursor.new(root, {
+          behavior: "none"
+        }));
+        cursor.lineY.set("visible", false);
+        
+        
+        // Generate random data
+        var date = new Date();
+        date.setHours(0, 0, 0, 0);
+        var value = 100;
+        var value2 = 80;
+        
+        function generateData() {
+          value = Math.round((Math.random() * 10 - 5) + value);
+          value2 = Math.round((Math.random() * 10 - 5) + value2);
+          am5.time.add(date, "day", 1);
+          return {
+            date: date.getTime(),
+            value: value,
+            value2: value2
+          };
+        }
+        
+        function generateDatas(count) {
+          var data = [];
+          for (var i = 0; i < count; ++i) {
+            data.push(generateData());
           }
-          
-          function generateDatas(count) {
-            var data = [];
-            for (var i = 0; i < count; ++i) {
-              data.push(generateData());
-            }
-            return data;
-          }
-          
-          
-          // Create axes
-          // https://www.amcharts.com/docs/v5/charts/xy-chart/axes/
-          var xAxis = chart.xAxes.push(am5xy.DateAxis.new(root, {
-            maxDeviation: 0.2,
-            baseInterval: {
-              timeUnit: "day",
-              count: 1
-            },
-            renderer: am5xy.AxisRendererX.new(root, {
-              minorGridEnabled:true
-            }),
-            tooltip: am5.Tooltip.new(root, {})
-          }));
-          
-          var yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, {
-            renderer: am5xy.AxisRendererY.new(root, {
-              pan:"zoom"
-            })  
-          }));
-          
-          
-          // Add series
-          // https://www.amcharts.com/docs/v5/charts/xy-chart/series/
-          var series = chart.series.push(am5xy.LineSeries.new(root, {
-            name: "Series",
-            xAxis: xAxis,
-            yAxis: yAxis,
-            valueYField: "value",
-            valueXField: "date",
-            tooltip: am5.Tooltip.new(root, {
-              labelText: "{valueY}"
-            })
-          }));
-          
-          // Set data
-          var data = generateDatas(1200);
-          series.data.setAll(data);
-          
-          
-          // Make stuff animate on load
-          // https://www.amcharts.com/docs/v5/concepts/animations/
-          series.appear(1000);
-          chart.appear(1000, 100);
+          return data;
+        }
+        
+        
+        // Create axes
+        // https://www.amcharts.com/docs/v5/charts/xy-chart/axes/
+        var xAxis = chart.xAxes.push(am5xy.DateAxis.new(root, {
+          maxDeviation: 0.2,
+          baseInterval: {
+            timeUnit: "day",
+            count: 1
+          },
+          renderer: am5xy.AxisRendererX.new(root, {
+            minorGridEnabled:true
+          }),
+          tooltip: am5.Tooltip.new(root, {})
+        }));
+        
+        var yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, {
+          renderer: am5xy.AxisRendererY.new(root, {
+            pan:"zoom"
+          })  
+        }));
+        
+        
+        // Add series
+        // https://www.amcharts.com/docs/v5/charts/xy-chart/series/
+        var series = chart.series.push(am5xy.LineSeries.new(root, {
+          name: "Series",
+          xAxis: xAxis,
+          yAxis: yAxis,
+          valueYField: "value",
+          valueXField: "date",
+          tooltip: am5.Tooltip.new(root, {
+            labelText: "{valueY}"
+          }),
+          stroke: "#3b82f6",
+          fill: "#3b82f6"
+        }));
+
+        var series2 = chart.series.push(am5xy.LineSeries.new(root, {
+          name: "Series 2",
+          xAxis: xAxis,
+          yAxis: yAxis,
+          valueYField: "value2",
+          valueXField: "date",
+          stroke: "#22c55e",
+          fill: "#22c55e",
+          tooltip: am5.Tooltip.new(root, {
+            labelText: "{valueY}"
+          }),
+        }));
+        
+        // Set data
+        var data = generateDatas(1200);
+        series.data.setAll(data);
+        series2.data.setAll(data);
+
+        // Make stuff animate on load
+        // https://www.amcharts.com/docs/v5/concepts/animations/
+        series.appear(1000);
+        series2.appear(1000);
+        chart.appear(1000, 100);
     }
 
     async renderComboCharts() {
@@ -121,28 +140,33 @@ export class Graph{
           var data = [
             {
               year: "2016",
-              income: 23.5,
-              expenses: 21.1
+              stock: 23.5,
+              crm: 21.1,
+              bfr: 1200
             },
             {
               year: "2017",
-              income: 26.2,
-              expenses: 30.5
+              stock: 26.2,
+              crm: 30.5,
+              bfr: 1500
             },
             {
               year: "2018",
-              income: 30.1,
-              expenses: 34.9
+              stock: 30.1,
+              crm: 34.9,
+              bfr: 1800
             },
             {
               year: "2019",
-              income: 29.5,
-              expenses: 31.1
+              stock: 29.5,
+              crm: 31.1,
+              bfr: 1150
             },
             {
               year: "2020",
-              income: 30.6,
-              expenses: 28.2,
+              stock: 30.6,
+              crm: 28.2,
+              bfr: 1680
             },
           ];
           
@@ -165,6 +189,7 @@ export class Graph{
           
           xAxis.data.setAll(data);
           
+          //Left Axis
           var yAxis = chart.yAxes.push(
             am5xy.ValueAxis.new(root, {
               min: 0,
@@ -174,43 +199,61 @@ export class Graph{
               })
             })
           );
-          
-          
-          // Add series
-          // https://www.amcharts.com/docs/v5/charts/xy-chart/series/
-          
-          var series1 = chart.series.push(
-            am5xy.ColumnSeries.new(root, {
-              name: "Income",
-              xAxis: xAxis,
-              yAxis: yAxis,
-              valueYField: "income",
-              categoryXField: "year",
-              tooltip: am5.Tooltip.new(root, {
-                pointerOrientation: "horizontal",
-                labelText: "{name} in {categoryX}: {valueY} {info}"
+
+          //Right Axis
+          var yAxis2 = chart.yAxes.push(
+            am5xy.ValueAxis.new(root, {
+              min: 0,
+              extraMax: 0.1,
+              renderer: am5xy.AxisRendererY.new(root, {
+                opposite: true,
+                strokeOpacity: 0.1
               })
             })
           );
           
-          series1.columns.template.setAll({
-            tooltipY: am5.percent(10),
-            templateField: "columnSettings"
-          });
+          function makeBarSeries(name, fieldName, color){
+            var series = chart.series.push(
+              am5xy.ColumnSeries.new(root, {
+                name: name,
+                xAxis: xAxis,
+                yAxis: yAxis,
+                valueYField: fieldName,
+                categoryXField: "year",
+                tooltip: am5.Tooltip.new(root, {
+                  pointerOrientation: "horizontal",
+                  labelText: "{name} in {categoryX}: {valueY} {info}"
+                }),
+                fill: color,
+                stroke: color
+              })
+            );
+            
+            series.columns.template.setAll({
+              tooltipY: am5.percent(10),
+              templateField: "columnSettings"
+            });
+            
+            series.data.setAll(data);
+            series.appear();
+          } 
           
-          series1.data.setAll(data);
+          makeBarSeries("Stock", "stock", "#f97316");
+          makeBarSeries("CRM", "crm", "#ef4444");
           
           var series2 = chart.series.push(
             am5xy.LineSeries.new(root, {
-              name: "Expenses",
+              name: "BFR",
               xAxis: xAxis,
-              yAxis: yAxis,
-              valueYField: "expenses",
+              yAxis: yAxis2,
+              valueYField: "bfr",
               categoryXField: "year",
               tooltip: am5.Tooltip.new(root, {
                 pointerOrientation: "horizontal",
                 labelText: "{name} in {categoryX}: {valueY} {info}"
-              })
+              }),
+              stroke: "#7c3aed",
+              fill: "#7c3aed"
             })
           );
           
@@ -248,7 +291,6 @@ export class Graph{
           // Make stuff animate on load
           // https://www.amcharts.com/docs/v5/concepts/animations/
           chart.appear(1000, 100);
-          series1.appear();
     }
 
     async renderPieCharts() {
