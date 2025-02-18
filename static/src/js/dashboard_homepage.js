@@ -19,13 +19,13 @@ export class DashboardHomepage extends Component {
         this.root = useRef("root");
         this.options = useState(new DashboardController())
         
-        // this.graph = new Graph(this.root);
-        // onMounted(async () => {
-        //     await this.graph.renderLineCharts();
-        //     await this.graph.renderComboCharts();
-        //     await this.graph.renderPieCharts();
-        //     await this.graph.renderSankeyDiagram();
-        // });
+        this.graph = new Graph(this.root);
+        onMounted(async () => {
+            await this.graph.renderLineCharts();
+            await this.graph.renderComboCharts();
+            await this.graph.renderPieCharts();
+            await this.graph.renderSankeyDiagram();
+        });
         this.onFilterChange = this.onFilterChange.bind(this);
         console.log(this.options);
     }
