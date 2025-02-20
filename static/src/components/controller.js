@@ -2,7 +2,6 @@
 
 import { _t } from "@web/core/l10n/translation";
 import { formatDate } from "@web/core/l10n/dates";
-
 const { DateTime } = luxon;
 
 export class DashboardController{

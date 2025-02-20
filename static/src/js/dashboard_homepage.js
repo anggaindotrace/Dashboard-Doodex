@@ -1,7 +1,8 @@
 /** @odoo-module **/
 
-import { Component, useState, useRef, onMounted } from "@odoo/owl";
+import { Component, useState, useRef, onMounted,onWillStart } from "@odoo/owl";
 import { registry } from "@web/core/registry";
+import { rpc } from "@web/core/network/rpc";
 import { DashboardFilters } from "@Dashboard-Doodex/components/filters/filters";
 import { ControlPanel } from "@web/search/control_panel/control_panel";
 import { KPI } from "@Dashboard-Doodex/components/KPIs/kpi";
@@ -17,17 +18,22 @@ export class DashboardHomepage extends Component {
     };
     setup() {
         this.root = useRef("root");
-        this.options = useState(new DashboardController())
-        
+        this.dashboardController = new DashboardController();
+        this.options = useState(this.dashboardController)
+        this.onFilterChange = this.onFilterChange.bind(this);
         this.graph = new Graph(this.root);
+        this.state = useState({
+            kpiData: null,
+        });
         onMounted(async () => {
             await this.graph.renderLineCharts();
             await this.graph.renderComboCharts();
             await this.graph.renderPieCharts();
             await this.graph.renderSankeyDiagram();
         });
-        this.onFilterChange = this.onFilterChange.bind(this);
-        console.log(this.options);
+        onWillStart(async () => {
+            await this.getKPIData();
+        });
     }
 
     /**
@@ -36,15 +42,28 @@ export class DashboardHomepage extends Component {
      * To change the filter, we need to change the options of the controller
      */
 
-    onFilterChange(filterComponent){
+    async onFilterChange(filterComponent){
         this.options = filterComponent.controller;
-        this.updateDomain();
+        if(this.options){
+            await this.getKPIData();
+        }
     }
 
-    updateDomain(){
-        
+    async getKPIData(){
+        let options = this.options.options;
+        try {
+            await rpc("/web/dataset/call_kw/universal.dashboard/get_financial_metrics", {
+                model: "universal.dashboard",
+                method: "get_financial_metrics",
+                args: [options.date.period_type, options.date.date_from, options.date.date_to],
+                kwargs: {}
+            }).then(res => {
+                this.state.kpiData = res;
+            });
+        } catch (error) {
+            console.log(error);
+        }
     }
-
 }
 
 registry.category('actions').add('dashboard_homepage', DashboardHomepage);
