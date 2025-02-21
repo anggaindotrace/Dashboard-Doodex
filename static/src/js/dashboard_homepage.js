@@ -24,15 +24,17 @@ export class DashboardHomepage extends Component {
         this.graph = new Graph(this.root);
         this.state = useState({
             kpiData: null,
+            salesPurchaseEvolution: null
         });
         onMounted(async () => {
-            await this.graph.renderLineCharts();
+            await this.graph.renderLineCharts(this.state.salesPurchaseEvolution);
             await this.graph.renderComboCharts();
             await this.graph.renderPieCharts();
             await this.graph.renderSankeyDiagram();
         });
         onWillStart(async () => {
             await this.getKPIData();
+            await this.getSalesPurchaseEvolution();
         });
     }
 
@@ -46,6 +48,8 @@ export class DashboardHomepage extends Component {
         this.options = filterComponent.controller;
         if(this.options){
             await this.getKPIData();
+            await this.getSalesPurchaseEvolution();
+            await this.graph.renderLineCharts(this.state.salesPurchaseEvolution);
         }
     }
 
@@ -59,6 +63,22 @@ export class DashboardHomepage extends Component {
                 kwargs: {}
             }).then(res => {
                 this.state.kpiData = res;
+            });
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    async getSalesPurchaseEvolution(){
+        let options = this.options.options;
+        try {
+            await rpc("/web/dataset/call_kw/universal.dashboard/get_sales_purchase_evolution", {
+                model: "universal.dashboard",
+                method: "get_sales_purchase_evolution",
+                args: [options.date.period_type, options.date.date_from, options.date.date_to],
+                kwargs: {}
+            }).then(res => {
+                this.state.salesPurchaseEvolution = res;
             });
         } catch (error) {
             console.log(error);

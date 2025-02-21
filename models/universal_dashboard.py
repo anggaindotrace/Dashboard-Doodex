@@ -3,6 +3,9 @@ from odoo.tools import format_amount
 from typing import Dict, List
 from dateutil.relativedelta import relativedelta
 import datetime
+import logging
+
+_logger = logging.getLogger(__name__)
 
 class UniversalDashboard(models.Model):
     _name = 'universal.dashboard'
@@ -359,15 +362,58 @@ class UniversalDashboard(models.Model):
         }
         return data
 
-    def get_sales_purchase_evolution(self, date_from: datetime = None, date_to: datetime = None) -> Dict[str, float]:
+    @api.model
+    def get_sales_purchase_evolution(self, period_type: str, date_from: datetime = None, date_to: datetime = None) -> Dict[str, float]:
         """
             Get the sales and purchase evolution for a given date range
 
         Args:
+            period_type (str): The period type
             date_from (datetime, optional): The start date. Defaults to None.
             date_to (datetime, optional): The end date. Defaults to None.
 
         Returns:
             Dict[str, float]: The sales and purchase evolution
         """
-        pass
+        period_units = {
+            'month': 'DAY',
+            'quarter': 'WEEK',
+            'year': 'MONTH'
+        }
+    
+        period_unit = period_units.get(period_type)
+        if not period_unit:
+            raise ValueError(f"Invalid period_type: {period_type}")
+
+        purchase_query = f'''
+            SELECT 
+                EXTRACT({period_unit} FROM date_approve) AS period,
+                SUM(amount_total) AS amount
+            FROM purchase_order
+            WHERE state = 'purchase' 
+            AND date_approve BETWEEN %s AND %s
+            GROUP BY period
+            ORDER BY period
+        '''
+        purchase_data = self._execute_query(purchase_query, (date_from, date_to))
+
+        sales_query = f'''
+            SELECT 
+                EXTRACT({period_unit} FROM date_order) AS period,
+                SUM(amount_total) AS amount
+            FROM sale_order
+            WHERE state = 'sale' AND date_order BETWEEN %s AND %s
+            GROUP BY period
+            ORDER BY period
+        '''
+        sales_data = self._execute_query(sales_query, (date_from, date_to))
+        sales_dict = {item['period']: item['amount'] for item in sales_data}
+        purchase_dict = {item['period']: item['amount'] for item in purchase_data}
+        common_periods = set(sales_dict.keys()) & set(purchase_dict.keys())
+        merged_data = [{
+            'period': period,
+            'purchase': purchase_dict[period],
+            'sales': sales_dict[period]
+        } for period in common_periods]
+
+        return merged_data
