@@ -1,4 +1,5 @@
 /* global owl:readonly */
+import { isMobileOS } from "@web/core/browser/feature_detection";
 
 export class Graph{
     constructor(root){
@@ -19,109 +20,184 @@ export class Graph{
 
     async renderLineCharts() {
       const root = await this.initChart("#sales_purchase_evolution");
-      var chart = root.container.children.push(am5xy.XYChart.new(root, {
-          panX: true,
-          panY: true,
-          wheelX: "panX",
+      // var chart = root.container.children.push(am5xy.XYChart.new(root, {
+      //     panX: true,
+      //     panY: true,
+      //     wheelX: "panX",
+      //     wheelY: "zoomX",
+      //     pinchZoomX:true,
+      //     paddingLeft: 0
+      //   }));
+        
+        
+      //   // Add cursor
+      //   // https://www.amcharts.com/docs/v5/charts/xy-chart/cursor/
+      //   var cursor = chart.set("cursor", am5xy.XYCursor.new(root, {
+      //     behavior: "none"
+      //   }));
+      //   cursor.lineY.set("visible", false);
+        
+        
+      //   // Generate random data
+      //   var date = new Date();
+      //   date.setHours(0, 0, 0, 0);
+      //   var value = 100;
+      //   var value2 = 80;
+        
+      //   function generateData() {
+      //     value = Math.round((Math.random() * 10 - 5) + value);
+      //     value2 = Math.round((Math.random() * 10 - 5) + value2);
+      //     am5.time.add(date, "day", 1);
+      //     return {
+      //       date: date.getTime(),
+      //       value: value,
+      //       value2: value2
+      //     };
+      //   }
+        
+      //   function generateDatas(count) {
+      //     var data = [];
+      //     for (var i = 0; i < count; ++i) {
+      //       data.push(generateData());
+      //     }
+      //     return data;
+      //   }
+        
+        
+      //   // Create axes
+      //   // https://www.amcharts.com/docs/v5/charts/xy-chart/axes/
+      //   var xAxis = chart.xAxes.push(am5xy.DateAxis.new(root, {
+      //     maxDeviation: 0.2,
+      //     baseInterval: {
+      //       timeUnit: "day",
+      //       count: 1
+      //     },
+      //     renderer: am5xy.AxisRendererX.new(root, {
+      //       minorGridEnabled:true
+      //     }),
+      //     tooltip: am5.Tooltip.new(root, {})
+      //   }));
+        
+      //   var yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, {
+      //     renderer: am5xy.AxisRendererY.new(root, {
+      //       pan:"zoom"
+      //     })  
+      //   }));
+        
+        
+      //   // Add series
+      //   // https://www.amcharts.com/docs/v5/charts/xy-chart/series/
+      //   var series = chart.series.push(am5xy.LineSeries.new(root, {
+      //     name: "Sales",
+      //     xAxis: xAxis,
+      //     yAxis: yAxis,
+      //     valueYField: "value",
+      //     valueXField: "date",
+      //     tooltip: am5.Tooltip.new(root, {
+      //       labelText: "{valueY}"
+      //     }),
+      //     stroke: "#3b82f6",
+      //     fill: "#3b82f6",
+      //   }));
+
+      //   var series2 = chart.series.push(am5xy.LineSeries.new(root, {
+      //     name: "Purchases",
+      //     xAxis: xAxis,
+      //     yAxis: yAxis,
+      //     valueYField: "value2",
+      //     valueXField: "date",
+      //     stroke: "#22c55e",
+      //     fill: "#22c55e",
+      //     tooltip: am5.Tooltip.new(root, {
+      //       labelText: "{valueY}"
+      //     }),
+      //   }));
+        
+      //   // Set data
+      //   var data = generateDatas(1200);
+      //   series.data.setAll(data);
+      //   series2.data.setAll(data);
+
+      //   // Make stuff animate on load
+      //   // https://www.amcharts.com/docs/v5/concepts/animations/
+      //   series.appear(1000);
+      //   series2.appear(1000);
+      //   chart.appear(1000, 100);
+      var chart = root.container.children.push( 
+        am5xy.XYChart.new(root, {
+          panY: false,
           wheelY: "zoomX",
-          pinchZoomX:true,
-          paddingLeft: 0
-        }));
-        
-        
-        // Add cursor
-        // https://www.amcharts.com/docs/v5/charts/xy-chart/cursor/
-        var cursor = chart.set("cursor", am5xy.XYCursor.new(root, {
-          behavior: "none"
-        }));
-        cursor.lineY.set("visible", false);
-        
-        
-        // Generate random data
-        var date = new Date();
-        date.setHours(0, 0, 0, 0);
-        var value = 100;
-        var value2 = 80;
-        
-        function generateData() {
-          value = Math.round((Math.random() * 10 - 5) + value);
-          value2 = Math.round((Math.random() * 10 - 5) + value2);
-          am5.time.add(date, "day", 1);
-          return {
-            date: date.getTime(),
-            value: value,
-            value2: value2
-          };
-        }
-        
-        function generateDatas(count) {
-          var data = [];
-          for (var i = 0; i < count; ++i) {
-            data.push(generateData());
-          }
-          return data;
-        }
-        
-        
-        // Create axes
-        // https://www.amcharts.com/docs/v5/charts/xy-chart/axes/
-        var xAxis = chart.xAxes.push(am5xy.DateAxis.new(root, {
-          maxDeviation: 0.2,
-          baseInterval: {
-            timeUnit: "day",
-            count: 1
-          },
+          layout: root.verticalLayout,
+          maxTooltipDistance: 0
+        }) 
+      );
+      
+      // Define data
+      var data = [{
+        category: "Q1",
+        value: 1
+      }, {
+        category: "Q2",
+        value: 3
+      }, {
+        category: "Q3",
+        value: 2
+      }, {
+        category: "Q4",
+        value: 1
+      }];
+      
+      // Create Y-axis
+      var yAxis = chart.yAxes.push(
+        am5xy.ValueAxis.new(root, {
+          extraTooltipPrecision: 1,
+          renderer: am5xy.AxisRendererY.new(root, {})
+        })
+      );
+      
+      // Create X-Axis
+      var xAxis = chart.xAxes.push(
+        am5xy.CategoryAxis.new(root, {
+          categoryField: "category",
           renderer: am5xy.AxisRendererX.new(root, {
-            minorGridEnabled:true
+            minGridDistance: 20
           }),
-          tooltip: am5.Tooltip.new(root, {})
-        }));
-        
-        var yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, {
-          renderer: am5xy.AxisRendererY.new(root, {
-            pan:"zoom"
-          })  
-        }));
-        
-        
-        // Add series
-        // https://www.amcharts.com/docs/v5/charts/xy-chart/series/
-        var series = chart.series.push(am5xy.LineSeries.new(root, {
-          name: "Series",
+        })
+      );
+      xAxis.data.setAll(data);
+      
+      // Create series
+      
+      var series = chart.series.push(
+        am5xy.LineSeries.new(root, {
+          name: "Sales",
           xAxis: xAxis,
           yAxis: yAxis,
           valueYField: "value",
-          valueXField: "date",
-          tooltip: am5.Tooltip.new(root, {
-            labelText: "{valueY}"
-          }),
-          stroke: "#3b82f6",
-          fill: "#3b82f6"
-        }));
-
-        var series2 = chart.series.push(am5xy.LineSeries.new(root, {
-          name: "Series 2",
-          xAxis: xAxis,
-          yAxis: yAxis,
-          valueYField: "value2",
-          valueXField: "date",
-          stroke: "#22c55e",
-          fill: "#22c55e",
-          tooltip: am5.Tooltip.new(root, {
-            labelText: "{valueY}"
-          }),
-        }));
+          categoryXField: "category",
+          legendLabelText: "{name}: {categoryX}",
+          legendRangeLabelText: "{name}"
+        })
+      );
         
-        // Set data
-        var data = generateDatas(1200);
-        series.data.setAll(data);
-        series2.data.setAll(data);
-
-        // Make stuff animate on load
-        // https://www.amcharts.com/docs/v5/concepts/animations/
-        series.appear(1000);
-        series2.appear(1000);
-        chart.appear(1000, 100);
+      series.data.setAll(data);
+      
+      // Add cursor
+      chart.set("cursor", am5xy.XYCursor.new(root, {
+        behavior: "zoomXY",
+        xAxis: xAxis
+      }));
+      
+      xAxis.set("tooltip", am5.Tooltip.new(root, {
+        themeTags: ["axis"]
+      }));
+      
+      yAxis.set("tooltip", am5.Tooltip.new(root, {
+        themeTags: ["axis"]
+      }));
+      
+      var legend = chart.children.push(am5.Legend.new(root, {}));
+      legend.data.setAll(chart.series.values);
     }
 
     async renderComboCharts() {
@@ -313,7 +389,19 @@ export class Graph{
           
           series.slices.template.set("templateField", "sliceSettings");
           series.labels.template.set("radius", 30);
-          
+
+          //hide while mobile
+          function visibilityTicks(){
+            const smallScreen = window.innerWidth < 768;
+            if(smallScreen){
+              series.ticks.template.set("forceHidden", true);
+              series.labels.template.set("forceHidden", true);
+            }
+          }
+
+          visibilityTicks();
+          window.addEventListener("resize", visibilityTicks);
+
           // Set up click events
           series.slices.template.events.on("click", function(event) {
             console.log(event.target.dataItem.dataContext)
@@ -357,8 +445,8 @@ export class Graph{
             }]
           }];
           series.data.setAll(generateChartData());
-          
-          
+      
+          //generate chart data
           function generateChartData() {
             var chartData = [];
             for (var i = 0; i < types.length; i++) {

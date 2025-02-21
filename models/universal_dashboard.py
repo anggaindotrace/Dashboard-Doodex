@@ -331,13 +331,13 @@ class UniversalDashboard(models.Model):
         current_data = self.calculate_financial_metrics(date_from, date_to)
 
         #percentage
-        percentage_revenue = (current_data['revenue'] - prev_data['revenue']) / prev_data['revenue'] * 100 if prev_data['revenue'] else 0
-        percentage_bfr = (current_data['bfr'] - prev_data['bfr']) / prev_data['bfr'] * 100 if prev_data['bfr'] else 0
-        percentage_gross_profit_margin = (current_data['gross_profit_margin'] - prev_data['gross_profit_margin']) / prev_data['gross_profit_margin'] * 100 if prev_data['gross_profit_margin'] else 0
-        percentage_net_profit_margin = (current_data['net_profit_margin'] - prev_data['net_profit_margin']) / prev_data['net_profit_margin'] * 100 if prev_data['net_profit_margin'] else 0
-        percentage_roi = (current_data['roi'] - prev_data['roi']) / prev_data['roi'] * 100 if prev_data['roi'] else 0
-        percentage_stock_valuation = (current_data['stock_valuation'] - prev_data['stock_valuation']) / prev_data['stock_valuation'] * 100 if prev_data['stock_valuation'] else 0
-        percentage_number_of_opportunities = (current_data['number_of_opportunities'] - prev_data['number_of_opportunities']) / prev_data['number_of_opportunities'] * 100 if prev_data['number_of_opportunities'] else 0
+        percentage_revenue = (current_data['revenue'] - prev_data['revenue']) / abs(prev_data['revenue']) * 100 if prev_data['revenue'] else 0
+        percentage_bfr = (current_data['bfr'] - prev_data['bfr']) / abs(prev_data['bfr']) * 100 if prev_data['bfr'] else 0
+        percentage_gross_profit_margin = (current_data['gross_profit_margin'] - prev_data['gross_profit_margin']) / abs(prev_data['gross_profit_margin']) * 100 if prev_data['gross_profit_margin'] else 0
+        percentage_net_profit_margin = (current_data['net_profit_margin'] - prev_data['net_profit_margin']) / abs(prev_data['net_profit_margin']) * 100 if prev_data['net_profit_margin'] else 0
+        percentage_roi = (current_data['roi'] - prev_data['roi']) / abs(prev_data['roi']) * 100 if prev_data['roi'] else 0
+        percentage_stock_valuation = (current_data['stock_valuation'] - prev_data['stock_valuation']) / abs(prev_data['stock_valuation']) * 100 if prev_data['stock_valuation'] else 0
+        percentage_number_of_opportunities = (current_data['number_of_opportunities'] - prev_data['number_of_opportunities']) / abs(prev_data['number_of_opportunities']) * 100 if prev_data['number_of_opportunities'] else 0
 
         data = {
             'revenue' : format_amount(self.env, current_data['revenue'], currency),
@@ -358,3 +358,16 @@ class UniversalDashboard(models.Model):
             }
         }
         return data
+
+    def get_sales_purchase_evolution(self, date_from: datetime = None, date_to: datetime = None) -> Dict[str, float]:
+        """
+            Get the sales and purchase evolution for a given date range
+
+        Args:
+            date_from (datetime, optional): The start date. Defaults to None.
+            date_to (datetime, optional): The end date. Defaults to None.
+
+        Returns:
+            Dict[str, float]: The sales and purchase evolution
+        """
+        pass
