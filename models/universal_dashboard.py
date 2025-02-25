@@ -436,3 +436,65 @@ class UniversalDashboard(models.Model):
         } for period in common_periods]
 
         return merged_data
+    
+    def _build_account_query_category_breakdown(self, account_types: list) -> str:
+        """
+            Build a SQL query to get the account balance
+            args:
+                account_types (list): The type of the account
+            returns:
+                str: The SQL query
+        """
+        query = """
+            SELECT 
+                aml.credit,
+                aml.debit,
+                aml.balance,
+                aml.date,
+                aml.purchase_order_id,
+                aml.sale_order_id
+            FROM account_move_line aml
+            INNER JOIN account_account aa ON aml.account_id = aa.id
+            INNER JOIN account_move am ON aml.move_id = am.id
+            INNER JOIN sale_order so ON aml.sale_order_id = so.id
+        """
+        return query
+
+    @api.model
+    def get_category_breakdown_data(self, period_type: str, date_from: datetime = None, date_to: datetime = None) -> Dict[str, float]:
+        """
+            Get the category breakdown data for a given date range
+        """
+        move_lines = self.env['account.move.line'].search([('date', '>=', date_from),
+                                                           ('date', '<=', date_to)])
+        purchase_data = move_lines.filtered(lambda ml: ml.purchase_order_id)
+        sale_data = move_lines.filtered(lambda ml: ml.sale_line_ids)
+        
+        result = []
+        for purchase in purchase_data:
+            print(f"purchase_data=============: {purchase.product_id.product_tmpl_id._fields['type']}")
+            result.append({
+                'type': 'Purchase',
+                'amount': abs(purchase.balance),
+                'product_id': purchase.product_id.id,
+                'product_name': purchase.product_id.name,
+                'product_type': dict(purchase.product_id.product_tmpl_id._fields['type'].selection).get(purchase.product_id.product_tmpl_id.type),
+                'purchase_order_id': purchase.purchase_order_id.id,
+                'move_line_id': purchase.id,
+                'currency_id': purchase.currency_id.name,
+                'currency_symbol': purchase.currency_id.symbol
+             })
+        for sale in sale_data:
+            result.append({
+                'type': 'Sale',
+                'amount': abs(sale.balance),
+                'product_id': sale.product_id.id,
+                'product_name': sale.product_id.name,
+                'product_type': dict(sale.product_id.product_tmpl_id._fields['type'].selection).get(sale.product_id.product_tmpl_id.type),
+                'sale_order_id': sale.sale_line_ids.mapped('order_id').ids,
+                'move_line_id': sale.id,
+                'currency_id': sale.currency_id.name,
+                'currency_symbol': sale.currency_id.symbol
+            })
+
+        return result

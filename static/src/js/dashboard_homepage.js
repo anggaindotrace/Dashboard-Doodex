@@ -24,17 +24,19 @@ export class DashboardHomepage extends Component {
         this.graph = new Graph(this.root);
         this.state = useState({
             kpiData: null,
-            salesPurchaseEvolution: null
+            salesPurchaseEvolution: null,
+            categoryBreakdownData: null
         });
         onMounted(async () => {
             await this.graph.renderLineCharts(this.state.salesPurchaseEvolution);
             await this.graph.renderComboCharts();
-            await this.graph.renderPieCharts();
+            await this.graph.renderPieCharts(this.state.categoryBreakdownData);
             await this.graph.renderSankeyDiagram();
         });
         onWillStart(async () => {
             await this.getKPIData();
             await this.getSalesPurchaseEvolution();
+            await this.getCategoryBreakdownData();
         });
     }
 
@@ -49,7 +51,9 @@ export class DashboardHomepage extends Component {
         if(this.options){
             await this.getKPIData();
             await this.getSalesPurchaseEvolution();
+            await this.getCategoryBreakdownData();
             await this.graph.renderLineCharts(this.state.salesPurchaseEvolution);
+            await this.graph.renderPieCharts(this.state.categoryBreakdownData);
         }
     }
 
@@ -79,6 +83,22 @@ export class DashboardHomepage extends Component {
                 kwargs: {}
             }).then(res => {
                 this.state.salesPurchaseEvolution = res;
+            });
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    async getCategoryBreakdownData(){
+        let options = this.options.options;
+        try {
+            await rpc("/web/dataset/call_kw/universal.dashboard/get_category_breakdown_data", {
+                model: "universal.dashboard",
+                method: "get_category_breakdown_data",
+                args: [options.date.period_type, options.date.date_from, options.date.date_to],
+                kwargs: {}
+            }).then(res => {
+                this.state.categoryBreakdownData = res;
             });
         } catch (error) {
             console.log(error);

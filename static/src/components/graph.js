@@ -1,9 +1,15 @@
 /* global owl:readonly */
 import { isMobileOS } from "@web/core/browser/feature_detection";
+import { Component, useState, useRef, onMounted,onWillStart } from "@odoo/owl";
+
+import { rpc } from "@web/core/network/rpc";
+import { DashboardController } from "@Dashboard-Doodex/components/controller";
 
 export class Graph{
     constructor(root){
         this.root = root;
+        this.dashboardController = new DashboardController();
+        this.options = useState(this.dashboardController)
     }
 
     async initChart(referenceId) {
@@ -281,7 +287,69 @@ export class Graph{
           chart.appear(1000, 100);
     }
 
-    async renderPieCharts() {
+    generateSeriesData(resultData, series) {
+        // Initialize an empty array to hold the series data
+        var seriesData = [];
+        // Group data by type, then by product type, and then by product_id
+        var groupedData = resultData.reduce((acc, item) => {
+            if (!acc[item.type]) {
+                acc[item.type] = {
+                    type: item.type,
+                    percent: 0, // This will be calculated later
+                    color: null, // Assign colors as needed
+                    subs: [],
+                    currency_symbol: item.currency_symbol
+                };
+            }
+            let subIndex = acc[item.type].subs.findIndex(sub => sub.type === item.product_type);
+            if (subIndex === -1) {
+                acc[item.type].subs.push({
+                    type: item.product_type,
+                    percent: 0, // This will be adjusted to a percentage later
+                    products: [],
+                    currency_symbol: item.currency_symbol
+                });
+                subIndex = acc[item.type].subs.length - 1;
+            }
+            let productIndex = acc[item.type].subs[subIndex].products.findIndex(product => product.id === item.product_id);
+            if (productIndex === -1) {
+                acc[item.type].subs[subIndex].products.push({
+                    id: item.product_id,
+                    name: item.product_name,
+                    totalAmount: item.amount, // Store the total amount
+                    moveLineId: item.move_line_id, // Add move_line_id
+                    currency_symbol: item.currency_symbol
+                });
+            } else {
+                acc[item.type].subs[subIndex].products[productIndex].totalAmount += item.amount;
+            }
+            return acc;
+        }, {});
+    
+        // Calculate total amount for percentage calculation
+        var totalAmount = resultData.reduce((sum, item) => sum + item.amount, 0);
+    
+        // Calculate percentages and push to seriesData
+        for (var key in groupedData) {
+            var group = groupedData[key];
+            var groupTotal = group.subs.reduce((sum, sub) => sum + sub.products.reduce((subSum, product) => subSum + product.totalAmount, 0), 0);
+            group.percent = (groupTotal / totalAmount) * 100;
+    
+            // Calculate percentage for each sub-category and product based on the group's total percent
+            group.subs.forEach(sub => {
+                var subTotal = sub.products.reduce((sum, product) => sum + product.totalAmount, 0);
+                sub.percent = (subTotal / groupTotal) * group.percent;
+            });
+
+            // Assign color using series
+            group.color = series.get("colors").getIndex(seriesData.length);
+
+            seriesData.push(group);
+        }
+        return seriesData;
+    }
+
+    async renderPieCharts(data) {
         const root = await this.initChart("#category_breakdown");
         var chart = root.container.children.push( 
             am5percent.PieChart.new(root, {
@@ -300,7 +368,7 @@ export class Graph{
           );
           
           series.slices.template.set("templateField", "sliceSettings");
-          series.labels.template.set("radius", 30);
+          series.labels.template.set("radius", 20);
 
           //hide while mobile
           function visibilityTicks(){
@@ -316,46 +384,24 @@ export class Graph{
 
           // Set up click events
           series.slices.template.events.on("click", function(event) {
-            console.log(event.target.dataItem.dataContext)
-            if (event.target.dataItem.dataContext.id != undefined) {
-              selected = event.target.dataItem.dataContext.id;
-            } else {
-              selected = undefined;
+            var dataContext = event.target.dataItem.dataContext;
+            if (dataContext.sliceSettings && dataContext.sliceSettings.active) {
+              // Open a modal when sliceSettings.active is true
+              openModal(dataContext);
+            }else{
+              if (dataContext.id != undefined) {
+                selected = dataContext.id;
+              } else {
+                selected = undefined;
+              }
+              series.data.setAll(generateChartData());
             }
-            series.data.setAll(generateChartData());
           });
-          
+
           // Define data
+          // var data = await data;
           var selected;
-          var types = [{
-            type: "Fossil Energy",
-            percent: 70,
-            color: series.get("colors").getIndex(0),
-            subs: [{
-              type: "Oil",
-              percent: 15
-            }, {
-              type: "Coal",
-              percent: 35
-            }, {
-              type: "Nuclear",
-              percent: 20
-            }]
-          }, {
-            type: "Green Energy",
-            percent: 30,
-            color: series.get("colors").getIndex(1),
-            subs: [{
-              type: "Hydro",
-              percent: 15
-            }, {
-              type: "Wind",
-              percent: 10
-            }, {
-              type: "Other",
-              percent: 5
-            }]
-          }];
+          var types = this.generateSeriesData(data, series);
           series.data.setAll(generateChartData());
       
           //generate chart data
@@ -365,13 +411,17 @@ export class Graph{
               if (i == selected) {
                 for (var x = 0; x < types[i].subs.length; x++) {
                   chartData.push({
+                    parent_type: types[i].type,
                     type: types[i].subs[x].type,
                     percent: types[i].subs[x].percent,
                     color: types[i].color,
                     pulled: true,
                     sliceSettings: {
                       active: true
-                    }
+                    },
+                    products: types[i].subs[x].products,
+                    move_line_ids: types[i].subs[x].products.map(product => product.moveLineId),
+                    currency_symbol: types[i].subs[x].currency_symbol
                   });
                 }
               } else {
@@ -384,6 +434,82 @@ export class Graph{
               }
             }
             return chartData;
+          }
+
+          function openModal(dataContext) {
+            // Calculate the total amount sum
+            const products = dataContext.products;
+            const totalAmountSum = products.reduce((sum, product) => sum + product.totalAmount, 0);
+        
+            // Format number as monetary (1.002,400)
+            const formattedTotalAmountSum = totalAmountSum.toLocaleString("id-ID", { minimumFractionDigits: 2 });
+        
+            // Open a modal that shows the product names and total amounts in a table
+            let modalContent = `
+              <div style="margin-bottom: 10px; font-weight: bold;">
+                ${dataContext.parent_type} > ${dataContext.type}
+              </div>
+              <div style="max-height: 400px; overflow-y: auto;">
+                <table style="width: 100%; border-collapse: collapse;">
+                  <thead style="position: sticky; top: 0; background: white;">
+                    <tr>
+                      <th style="border: 1px solid #ddd; padding: 8px; font-weight: bold;">Product</th>
+                      <th style="border: 1px solid #ddd; padding: 8px; font-weight: bold; text-align: right;">Total Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+            `;
+        
+            products.forEach(product => {
+                const formattedAmount = product.totalAmount.toLocaleString("id-ID", { minimumFractionDigits: 2 });
+                modalContent += `
+                  <tr>
+                    <td style="border: 1px solid #ddd; padding: 8px;">${product.name}</td>
+                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${dataContext.currency_symbol} ${formattedAmount}</td>
+                  </tr>
+                `;
+            });
+            modalContent += `
+                  <tr style="position: sticky; bottom: 0; background: white;">
+                    <td style="border: 1px solid #ddd; padding: 8px; font-weight: bold;">Total</th>
+                    <td style="border: 1px solid #ddd; padding: 8px; font-weight: bold; text-align: right;">${dataContext.currency_symbol} ${formattedTotalAmountSum}</th>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            `;
+
+            const modal = document.createElement('div');
+            modal.innerHTML = modalContent;
+            modal.style.position = 'fixed';
+            modal.style.top = '50%';
+            modal.style.left = '50%';
+            modal.style.transform = 'translate(-50%, -50%)';
+            modal.style.backgroundColor = 'white';
+            modal.style.padding = '20px';
+            modal.style.boxShadow = '0 0 10px rgba(0, 0, 0, 0.1)';
+            modal.style.zIndex = '1001'; // Ensure modal is above the overlay
+            modal.style.display = 'block';
+            modal.style.maxHeight = '80vh'; // Limit modal height to 80% of viewport height
+            modal.style.width = '80%'; // Set modal width to 80% of viewport width
+            modal.style.maxWidth = '800px'; // Maximum width of 800px
+
+            const overlay = document.createElement('div');
+            overlay.style.position = 'fixed';
+            overlay.style.top = '0';
+            overlay.style.left = '0';
+            overlay.style.width = '100%';
+            overlay.style.height = '100%';
+            overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+            overlay.style.zIndex = '1000'; // Ensure overlay is below the modal
+            document.body.appendChild(overlay);
+            document.body.appendChild(modal);
+
+            // Close modal and remove overlay on click outside
+            overlay.addEventListener('click', function() {
+              document.body.removeChild(modal);
+              document.body.removeChild(overlay);
+            });
           }
     }
 
