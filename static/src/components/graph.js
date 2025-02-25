@@ -200,8 +200,8 @@ export class Graph{
             series.appear();
           } 
           
-          makeBarSeries("Stock", "stock_valuation", "#f97316");
-          makeBarSeries("CRM", "crm", "#ef4444");
+          makeBarSeries("Stock", "stock_valuation", "#008080");
+          makeBarSeries("CRM", "crm", "#6ebcb1");
           
           var series2 = chart.series.push(
             am5xy.LineSeries.new(root, {
@@ -214,8 +214,8 @@ export class Graph{
                 pointerOrientation: "horizontal",
                 labelText: "{name} in {categoryX}: {valueY} {info}"
               }),
-              stroke: "#7c3aed",
-              fill: "#7c3aed"
+              stroke: "#05665b",
+              fill: "#05665b"
             })
           );
           
@@ -485,19 +485,14 @@ export class Graph{
           // Set data
           // https://www.amcharts.com/docs/v5/charts/flow-charts/#Setting_data
           series.data.setAll([
-            { from: "A", to: "D", value: 10 },
-            { from: "B", to: "D", value: 8 },
-            { from: "B", to: "E", value: 4 },
-            { from: "D", to: "G", value: 5 },
-            { from: "D", to: "I", value: 2 },
-            { from: "D", to: "H", value: 3 },
-            { from: "E", to: "H", value: 4 },
-            { from: "G", to: "J", value: 5 },
-            { from: "I", to: "J", value: 1 },
-            { from: "H", to: "J", value: 9 }
+            { from: "Purchase", to: "Stock Valuation", value: 5000 },
+            { from: "Purchase", to: "On Delivery", value: 2500 },
+            { from: "Stock Valuation", to: "Operating Income", value: 4000 },
+            { from: "Stock Valuation", to: "Inventory", value: 1000 },
+            { from: "Operating Income", to: "Net Income", value: 3000 },
+            { from: "Operating Income", to: "COGS", value: 1000 },
           ]);
-          
-          
+
           // Make stuff animate on load
           series.appear(1000, 100);
     }

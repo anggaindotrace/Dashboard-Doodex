@@ -31,7 +31,7 @@ export class DashboardHomepage extends Component {
         });
         onMounted(async () => {
             await this.graph.renderLineCharts(this.state.salesPurchaseEvolution);
-            await this.graph.renderComboCharts();
+            await this.graph.renderComboCharts(this.state.stockCrmDistribution);
             await this.graph.renderPieCharts(this.state.categoryBreakdownDataPurchase, "#purchase_breakdown");
             await this.graph.renderPieCharts(this.state.categoryBreakdownDataSales, "#sales_breakdown");
             await this.graph.renderSankeyDiagram();
