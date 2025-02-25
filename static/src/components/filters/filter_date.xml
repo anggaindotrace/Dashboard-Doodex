@@ -40,7 +40,6 @@
 							to
 						</label>
 						<DateTimeInput type="'date'" value="dateTo()" onChange.bind="handleDateToChange"/>
-						<button class="btn btn-sm btn-primary">Apply</button>
 					</div>
 				</div>
 			</t>

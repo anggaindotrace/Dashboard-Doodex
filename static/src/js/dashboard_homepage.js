@@ -37,6 +37,7 @@ export class DashboardHomepage extends Component {
             await this.getKPIData();
             await this.getSalesPurchaseEvolution();
             await this.getCategoryBreakdownData();
+            await this.getStockCrmDistribution();
         });
     }
 
@@ -52,6 +53,7 @@ export class DashboardHomepage extends Component {
             await this.getKPIData();
             await this.getSalesPurchaseEvolution();
             await this.getCategoryBreakdownData();
+            await this.getStockCrmDistribution();
             await this.graph.renderLineCharts(this.state.salesPurchaseEvolution);
             await this.graph.renderPieCharts(this.state.categoryBreakdownData);
         }
@@ -99,6 +101,23 @@ export class DashboardHomepage extends Component {
                 kwargs: {}
             }).then(res => {
                 this.state.categoryBreakdownData = res;
+            });
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    async getStockCrmDistribution(){
+        let options = this.options.options;
+        try {
+            await rpc("/web/dataset/call_kw/universal.dashboard/get_stock_crm_distribution", {
+                model: "universal.dashboard",
+                method: "get_stock_crm_distribution",
+                args: [options.date.period_type, options.date.date_from, options.date.date_to],
+                kwargs: {}
+            }).then(res => {
+                this.state.stockCrmDistribution = res;
+                console.log(this.state.stockCrmDistribution);
             });
         } catch (error) {
             console.log(error);
