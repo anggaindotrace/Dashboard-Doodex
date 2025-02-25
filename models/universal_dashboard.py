@@ -238,16 +238,19 @@ class UniversalDashboard(models.Model):
             Dict[str, float]: The number of opportunities
         """
         query = '''
-            SELECT expected_revenue
-            FROM crm_lead
-            WHERE won_status = 'won' AND date_last_stage_update BETWEEN %s AND %s
+            SELECT so.amount_total
+            FROM crm_lead cl
+            INNER JOIN sale_order so ON so.opportunity_id = cl.id
+            WHERE cl.won_status = 'won' AND cl.date_last_stage_update BETWEEN %s AND %s
         '''
         if date_from and date_to:
             results = self._execute_query(query, (date_from, date_to))
         else:
             results = self._execute_query(query)
         
-        return sum(r['expected_revenue'] for r in results)
+        total_amount = sum(r['amount_total'] for r in results)
+        
+        return total_amount
 
     def calculate_financial_metrics(self, date_from: datetime = None, date_to: datetime = None) -> Dict[str, float]:
         """Calculate the financial metrics for a given date range
