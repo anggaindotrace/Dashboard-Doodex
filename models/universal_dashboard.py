@@ -25,7 +25,7 @@ class UniversalDashboard(models.Model):
             self._cr.execute(query)
         return self._cr.dictfetchall()
     
-    def _build_account_query(self, account_types: list) -> str:
+    def _build_account_query(self, account_types: list, company_id: int) -> str:
         """
             Build a SQL query to get the account balance
             args:
@@ -43,7 +43,7 @@ class UniversalDashboard(models.Model):
             FROM account_move_line aml
             INNER JOIN account_account aa ON aml.account_id = aa.id
             INNER JOIN account_move am ON aml.move_id = am.id
-            WHERE aa.account_type IN %s
+            WHERE aa.account_type IN %s AND am.company_id = %s
         """
         return query
     
@@ -51,12 +51,13 @@ class UniversalDashboard(models.Model):
         """
             Get the revenue for a given date range
         """
-        query = self._build_account_query(['income'])
+        company_id = self.env.company.id
+        query = self._build_account_query(['income'], company_id)
         if date_from and date_to:
             query += f" AND aml.date BETWEEN %s AND %s"
-            results = self._execute_query(query, (('income',), date_from, date_to))
+            results = self._execute_query(query, (('income',), company_id, date_from, date_to))
         else:
-            results = self._execute_query(query, (('income',),))
+            results = self._execute_query(query, (('income',), company_id))
             
         return {
             'total_credit': sum(r['credit'] for r in results),
@@ -75,12 +76,13 @@ class UniversalDashboard(models.Model):
         Returns:
             Dict[str, float]: The cost of revenue
         """
-        query = self._build_account_query(['expense_direct_cost'])
+        company_id = self.env.company.id
+        query = self._build_account_query(['expense_direct_cost'], company_id)
         if date_from and date_to:
             query += " AND aml.date BETWEEN %s AND %s"
-            results = self._execute_query(query, (('expense_direct_cost',), date_from, date_to))
+            results = self._execute_query(query, (('expense_direct_cost',), company_id, date_from, date_to))
         else:
-            results = self._execute_query(query, (('expense_direct_cost',),))
+            results = self._execute_query(query, (('expense_direct_cost',), company_id))
             
         return sum(r['balance'] for r in results)
     
@@ -94,12 +96,13 @@ class UniversalDashboard(models.Model):
         Returns:
             Dict[str, float]: The operating expenses
         """
-        query = self._build_account_query(['expense'])
+        company_id = self.env.company.id
+        query = self._build_account_query(['expense'], company_id)
         if date_from and date_to:
             query += " AND aml.date BETWEEN %s AND %s"
-            results = self._execute_query(query, (('expense',), date_from, date_to))
+            results = self._execute_query(query, (('expense',), company_id, date_from, date_to))
         else:
-            results = self._execute_query(query, (('expense',),))
+            results = self._execute_query(query, (('expense',), company_id))
 
         return sum(r['balance'] for r in results)
 
@@ -114,12 +117,13 @@ class UniversalDashboard(models.Model):
         Returns:
             Dict[str, float]: The other income
         """
-        query = self._build_account_query(['income_other'])
+        company_id = self.env.company.id
+        query = self._build_account_query(['income_other'], company_id)
         if date_from and date_to:
             query += " AND aml.date BETWEEN %s AND %s"
-            results = self._execute_query(query, (('income_other',), date_from, date_to))
+            results = self._execute_query(query, (('income_other',), company_id, date_from, date_to))
         else:
-            results = self._execute_query(query, (('income_other',),))
+            results = self._execute_query(query, (('income_other',), company_id))
 
         return sum(r['balance'] for r in results)
     
@@ -134,12 +138,13 @@ class UniversalDashboard(models.Model):
         Returns:
             Dict[str, float]: The other expenses
         """
-        query = self._build_account_query(['expense_depreciation'])
+        company_id = self.env.company.id
+        query = self._build_account_query(['expense_depreciation'], company_id)
         if date_from and date_to:
             query += " AND aml.date BETWEEN %s AND %s"
-            results = self._execute_query(query, (('expense_depreciation',), date_from, date_to))
+            results = self._execute_query(query, (('expense_depreciation',), company_id, date_from, date_to))
         else:
-            results = self._execute_query(query, (('expense_depreciation',),))
+            results = self._execute_query(query, (('expense_depreciation',), company_id))
 
         return sum(r['balance'] for r in results)
     
@@ -154,12 +159,13 @@ class UniversalDashboard(models.Model):
         Returns:
             Dict[str, float]: The total assets
         """
-        query = self._build_account_query(['asset_cash', 'asset_current', 'asset_non_current', 'asset_fixed', 'asset_receivable', 'asset_prepayments'])
+        company_id = self.env.company.id
+        query = self._build_account_query(['asset_cash', 'asset_current', 'asset_non_current', 'asset_fixed', 'asset_receivable', 'asset_prepayments'], company_id)
         if date_from and date_to:
             query += " AND aml.date BETWEEN %s AND %s"
-            results = self._execute_query(query, (('asset_cash', 'asset_current', 'asset_non_current', 'asset_fixed', 'asset_receivable', 'asset_prepayments'), date_from, date_to))
+            results = self._execute_query(query, (('asset_cash', 'asset_current', 'asset_non_current', 'asset_fixed', 'asset_receivable', 'asset_prepayments'), company_id, date_from, date_to))
         else:
-            results = self._execute_query(query, (('asset_cash', 'asset_current', 'asset_non_current', 'asset_fixed', 'asset_receivable', 'asset_prepayments'),))
+            results = self._execute_query(query, (('asset_cash', 'asset_current', 'asset_non_current', 'asset_fixed', 'asset_receivable', 'asset_prepayments'), company_id))
 
         return sum(r['balance'] for r in results)
     
@@ -178,11 +184,13 @@ class UniversalDashboard(models.Model):
             SELECT value
             FROM stock_valuation_layer
             WHERE create_date BETWEEN %s AND %s
+            AND company_id = %s
         '''
+        company_id = self.env.company.id
         if date_from and date_to:
-            results = self._execute_query(query, (date_from, date_to))
+            results = self._execute_query(query, (date_from, date_to, company_id))
         else:
-            results = self._execute_query(query)
+            results = self._execute_query(query, (company_id,))
 
         return sum(r['value'] for r in results)
     
@@ -197,12 +205,13 @@ class UniversalDashboard(models.Model):
         Returns:
             Dict[str, float]: The receivables
         """
-        query = self._build_account_query(['asset_receivable'])
+        company_id = self.env.company.id
+        query = self._build_account_query(['asset_receivable'], company_id)
         if date_from and date_to:
             query += " AND aml.date BETWEEN %s AND %s"
-            results = self._execute_query(query, (('asset_receivable',), date_from, date_to))
+            results = self._execute_query(query, (('asset_receivable',), company_id, date_from, date_to))
         else:
-            results = self._execute_query(query, (('asset_receivable',),))
+            results = self._execute_query(query, (('asset_receivable',), company_id))
 
         return sum(r['balance'] for r in results)
 
@@ -217,12 +226,13 @@ class UniversalDashboard(models.Model):
         Returns:
             Dict[str, float]: The payables
         """
-        query = self._build_account_query(['liability_payable'])
+        company_id = self.env.company.id
+        query = self._build_account_query(['liability_payable'], company_id)
         if date_from and date_to:
             query += " AND aml.date BETWEEN %s AND %s"
-            results = self._execute_query(query, (('liability_payable',), date_from, date_to))
+            results = self._execute_query(query, (('liability_payable',), company_id, date_from, date_to))
         else:
-            results = self._execute_query(query, (('liability_payable',),))
+            results = self._execute_query(query, (('liability_payable',), company_id))
 
         return sum(r['balance'] for r in results)
     
@@ -237,15 +247,17 @@ class UniversalDashboard(models.Model):
         Returns:
             Dict[str, float]: The number of opportunities
         """
+        company_id = self.env.company.id
         query = '''
             SELECT expected_revenue
             FROM crm_lead
             WHERE won_status = 'won' AND date_last_stage_update BETWEEN %s AND %s
+            AND company_id = %s
         '''
         if date_from and date_to:
-            results = self._execute_query(query, (date_from, date_to))
+            results = self._execute_query(query, (date_from, date_to, company_id))
         else:
-            results = self._execute_query(query)
+            results = self._execute_query(query, (company_id,))
         
         return sum(r['expected_revenue'] for r in results)
 
@@ -385,6 +397,8 @@ class UniversalDashboard(models.Model):
         if not period_unit:
             raise ValueError(f"Invalid period_type: {period_type}")
 
+        company_id = self.env.company.id
+
         purchase_query = f'''
             SELECT 
                 EXTRACT({period_unit} FROM date_approve) AS period,
@@ -392,10 +406,11 @@ class UniversalDashboard(models.Model):
             FROM purchase_order
             WHERE state = 'purchase' 
             AND date_approve BETWEEN %s AND %s
+            AND company_id = %s
             GROUP BY period
             ORDER BY period
         '''
-        purchase_data = self._execute_query(purchase_query, (date_from, date_to))
+        purchase_data = self._execute_query(purchase_query, (date_from, date_to, company_id))
 
         sales_query = f'''
             SELECT 
@@ -403,10 +418,11 @@ class UniversalDashboard(models.Model):
                 SUM(amount_total) AS amount
             FROM sale_order
             WHERE state = 'sale' AND date_order BETWEEN %s AND %s
+            AND company_id = %s
             GROUP BY period
             ORDER BY period
         '''
-        sales_data = self._execute_query(sales_query, (date_from, date_to))
+        sales_data = self._execute_query(sales_query, (date_from, date_to, company_id))
         sales_dict = {item['period']: item['amount'] for item in sales_data}
         purchase_dict = {item['period']: item['amount'] for item in purchase_data}
         common_periods = set(sales_dict.keys()) & set(purchase_dict.keys())

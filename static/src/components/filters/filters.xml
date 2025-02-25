@@ -4,11 +4,11 @@
         <div class="filter_date" id="filter_date">
             <t t-call="universal_dashboard.FilterDate"/>
         </div>
-        <div class="filter_category" id="filter_category">
+        <!-- <div class="filter_category" id="filter_category">
             <t t-call="universal_dashboard.FilterCategory"/>
         </div>
         <div class="filter_entity" id="filter_entity">
             <t t-call="universal_dashboard.FilterEntity"/>
-        </div>
+        </div> -->
     </t>
 </templates>
