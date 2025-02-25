@@ -258,67 +258,57 @@ export class Graph{
     generateSeriesData(resultData, series) {
         // Initialize an empty array to hold the series data
         var seriesData = [];
-        // Group data by type, then by product type, and then by product_id
+        
+        // Group data by product type
         var groupedData = resultData.reduce((acc, item) => {
-            if (!acc[item.type]) {
-                acc[item.type] = {
-                    type: item.type,
-                    percent: 0, // This will be calculated later
-                    color: null, // Assign colors as needed
-                    subs: [],
+            let productType = item.product_type;
+            if (!acc[productType]) {
+                acc[productType] = {
+                    parent_type: item.type,
+                    type: productType,
+                    percent: 0,
+                    color: null,
+                    products: [],
                     currency_symbol: item.currency_symbol
                 };
             }
-            let subIndex = acc[item.type].subs.findIndex(sub => sub.type === item.product_type);
-            if (subIndex === -1) {
-                acc[item.type].subs.push({
-                    type: item.product_type,
-                    percent: 0, // This will be adjusted to a percentage later
-                    products: [],
-                    currency_symbol: item.currency_symbol
-                });
-                subIndex = acc[item.type].subs.length - 1;
-            }
-            let productIndex = acc[item.type].subs[subIndex].products.findIndex(product => product.id === item.product_id);
+
+            let productIndex = acc[productType].products.findIndex(product => product.id === item.product_id);
             if (productIndex === -1) {
-                acc[item.type].subs[subIndex].products.push({
+                acc[productType].products.push({
+                    parent_type: item.type,
                     id: item.product_id,
                     name: item.product_name,
-                    totalAmount: item.amount, // Store the total amount
-                    moveLineId: item.move_line_id, // Add move_line_id
+                    totalAmount: item.amount,
+                    moveLineId: item.move_line_id,
                     currency_symbol: item.currency_symbol
                 });
             } else {
-                acc[item.type].subs[subIndex].products[productIndex].totalAmount += item.amount;
+                acc[productType].products[productIndex].totalAmount += item.amount;
             }
             return acc;
         }, {});
-    
+
         // Calculate total amount for percentage calculation
         var totalAmount = resultData.reduce((sum, item) => sum + item.amount, 0);
-    
+
         // Calculate percentages and push to seriesData
         for (var key in groupedData) {
             var group = groupedData[key];
-            var groupTotal = group.subs.reduce((sum, sub) => sum + sub.products.reduce((subSum, product) => subSum + product.totalAmount, 0), 0);
+            var groupTotal = group.products.reduce((sum, product) => sum + product.totalAmount, 0);
             group.percent = (groupTotal / totalAmount) * 100;
-    
-            // Calculate percentage for each sub-category and product based on the group's total percent
-            group.subs.forEach(sub => {
-                var subTotal = sub.products.reduce((sum, product) => sum + product.totalAmount, 0);
-                sub.percent = (subTotal / groupTotal) * group.percent;
-            });
 
             // Assign color using series
             group.color = series.get("colors").getIndex(seriesData.length);
 
             seriesData.push(group);
         }
+
         return seriesData;
     }
 
-    async renderPieCharts(data) {
-        const root = await this.initChart("#category_breakdown");
+    async renderPieCharts(data, referenceId) {
+        const root = await this.initChart(referenceId);
         var chart = root.container.children.push( 
             am5percent.PieChart.new(root, {
               layout: root.verticalLayout
@@ -377,27 +367,26 @@ export class Graph{
             var chartData = [];
             for (var i = 0; i < types.length; i++) {
               if (i == selected) {
-                for (var x = 0; x < types[i].subs.length; x++) {
-                  chartData.push({
-                    parent_type: types[i].type,
-                    type: types[i].subs[x].type,
-                    percent: types[i].subs[x].percent,
-                    color: types[i].color,
-                    pulled: true,
-                    sliceSettings: {
-                      active: true
-                    },
-                    products: types[i].subs[x].products,
-                    move_line_ids: types[i].subs[x].products.map(product => product.moveLineId),
-                    currency_symbol: types[i].subs[x].currency_symbol
-                  });
-                }
+                chartData.push({
+                  type: types[i].type,
+                  percent: types[i].percent,
+                  color: types[i].color,
+                  pulled: true,
+                  sliceSettings: {
+                    active: true
+                  },
+                  products: types[i].products,
+                  move_line_ids: types[i].products.map(product => product.moveLineId),
+                  currency_symbol: types[i].currency_symbol,
+                  parent_type: types[i].parent_type
+                });
               } else {
                 chartData.push({
                   type: types[i].type,
                   percent: types[i].percent,
                   color: types[i].color,
-                  id: i
+                  id: i,
+                  pulled: true
                 });
               }
             }
@@ -411,7 +400,7 @@ export class Graph{
         
             // Format number as monetary (1.002,400)
             const formattedTotalAmountSum = totalAmountSum.toLocaleString("id-ID", { minimumFractionDigits: 2 });
-        
+            console.log(dataContext);
             // Open a modal that shows the product names and total amounts in a table
             let modalContent = `
               <div style="margin-bottom: 10px; font-weight: bold;">

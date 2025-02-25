@@ -25,20 +25,23 @@ export class DashboardHomepage extends Component {
         this.state = useState({
             kpiData: null,
             salesPurchaseEvolution: null,
-            categoryBreakdownData: null,
-            stockCrmDistribution: null
+            stockCrmDistribution: null,
+            categoryBreakdownDataPurchase: null,
+            categoryBreakdownDataSales: null
         });
         onMounted(async () => {
             await this.graph.renderLineCharts(this.state.salesPurchaseEvolution);
-            await this.graph.renderComboCharts(this.state.stockCrmDistribution);
-            await this.graph.renderPieCharts(this.state.categoryBreakdownData);
+            await this.graph.renderComboCharts();
+            await this.graph.renderPieCharts(this.state.categoryBreakdownDataPurchase, "#purchase_breakdown");
+            await this.graph.renderPieCharts(this.state.categoryBreakdownDataSales, "#sales_breakdown");
             await this.graph.renderSankeyDiagram();
         });
         onWillStart(async () => {
             await this.getKPIData();
             await this.getSalesPurchaseEvolution();
-            await this.getCategoryBreakdownData();
             await this.getStockCrmDistribution();
+            await this.getCategoryBreakdownDataPurchase();
+            await this.getCategoryBreakdownDataSales();
         });
     }
 
@@ -53,12 +56,13 @@ export class DashboardHomepage extends Component {
         if(this.options){
             await this.getKPIData();
             await this.getSalesPurchaseEvolution();
-            await this.getCategoryBreakdownData();
+            await this.getCategoryBreakdownDataPurchase();
+            await this.getCategoryBreakdownDataSales();
             await this.getStockCrmDistribution();
             await this.graph.renderLineCharts(this.state.salesPurchaseEvolution);
             await this.graph.renderComboCharts(this.state.stockCrmDistribution);
-            await this.graph.renderPieCharts(this.state.categoryBreakdownData);
-
+            await this.graph.renderPieCharts(this.state.categoryBreakdownData, "#purchase_breakdown");
+            await this.graph.renderPieCharts(this.state.categoryBreakdownData, "#sales_breakdown");
         }
     }
 
@@ -94,22 +98,6 @@ export class DashboardHomepage extends Component {
         }
     }
 
-    async getCategoryBreakdownData(){
-        let options = this.options.options;
-        try {
-            await rpc("/web/dataset/call_kw/universal.dashboard/get_category_breakdown_data", {
-                model: "universal.dashboard",
-                method: "get_category_breakdown_data",
-                args: [options.date.period_type, options.date.date_from, options.date.date_to],
-                kwargs: {}
-            }).then(res => {
-                this.state.categoryBreakdownData = res;
-            });
-        } catch (error) {
-            console.log(error);
-        }
-    }
-
     async getStockCrmDistribution(){
         let options = this.options.options;
         try {
@@ -120,6 +108,39 @@ export class DashboardHomepage extends Component {
                 kwargs: {}
             }).then(res => {
                 this.state.stockCrmDistribution = res;
+                console.log(this.state.stockCrmDistribution);
+            });
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    async getCategoryBreakdownDataPurchase(){
+        let options = this.options.options;
+        try {
+            await rpc("/web/dataset/call_kw/universal.dashboard/get_purchase_breakdown_data_purchase", {
+                model: "universal.dashboard",
+                method: "get_purchase_breakdown_data_purchase",
+                args: [options.date.period_type, options.date.date_from, options.date.date_to],
+                kwargs: {}
+            }).then(res => {
+                this.state.categoryBreakdownDataPurchase = res;
+            });
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    async getCategoryBreakdownDataSales(){
+        let options = this.options.options;
+        try {
+            await rpc("/web/dataset/call_kw/universal.dashboard/get_purchase_breakdown_data_sales", {
+                model: "universal.dashboard",
+                method: "get_purchase_breakdown_data_sales",
+                args: [options.date.period_type, options.date.date_from, options.date.date_to],
+                kwargs: {}
+            }).then(res => {
+                this.state.categoryBreakdownDataSales = res;
             });
         } catch (error) {
             console.log(error);

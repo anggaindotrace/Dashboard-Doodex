@@ -63,12 +63,22 @@
 							<div class="col-md-6" style="height: 525px;">
 								<div>
 									<span class="fs-2 fw-bold">
-										Category Breakdown
+										Purchase Breakdown 
 									</span>
 								</div>
-								<div id="category_breakdown" style="width: 100%; height: 450px;" />
+								<div id="purchase_breakdown" style="width: 100%; height: 450px;" />
 							</div>
-							<div class="col-md-6 mb-5" style="height: 500px;">
+							<div class="col-md-6" style="height: 525px;">
+								<div>
+									<span class="fs-2 fw-bold">
+										Sales Breakdown
+									</span>
+								</div>
+								<div id="sales_breakdown" style="width: 100%; height: 450px;" />
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-12 mb-5" style="height: 500px;">
 								<div>
 									<span class="fs-2 fw-bold">
 										Monetary Flow

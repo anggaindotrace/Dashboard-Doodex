@@ -528,31 +528,8 @@ class UniversalDashboard(models.Model):
         return merged_data
 
     
-    def _build_account_query_category_breakdown(self, account_types: list) -> str:
-        """
-            Build a SQL query to get the account balance
-            args:
-                account_types (list): The type of the account
-            returns:
-                str: The SQL query
-        """
-        query = """
-            SELECT 
-                aml.credit,
-                aml.debit,
-                aml.balance,
-                aml.date,
-                aml.purchase_order_id,
-                aml.sale_order_id
-            FROM account_move_line aml
-            INNER JOIN account_account aa ON aml.account_id = aa.id
-            INNER JOIN account_move am ON aml.move_id = am.id
-            INNER JOIN sale_order so ON aml.sale_order_id = so.id
-        """
-        return query
-
     @api.model
-    def get_category_breakdown_data(self, period_type: str, date_from: datetime = None, date_to: datetime = None) -> Dict[str, float]:
+    def get_purchase_breakdown_data_purchase(self, period_type: str, date_from: datetime = None, date_to: datetime = None) -> Dict[str, float]:
         """
             Get the category breakdown data for a given date range
         """
@@ -563,7 +540,6 @@ class UniversalDashboard(models.Model):
         
         result = []
         for purchase in purchase_data:
-            print(f"purchase_data=============: {purchase.product_id.product_tmpl_id._fields['type']}")
             result.append({
                 'type': 'Purchase',
                 'amount': abs(purchase.balance),
@@ -575,6 +551,19 @@ class UniversalDashboard(models.Model):
                 'currency_id': purchase.currency_id.name,
                 'currency_symbol': purchase.currency_id.symbol
              })
+            
+        return result
+    
+    @api.model
+    def get_purchase_breakdown_data_sales(self, period_type: str, date_from: datetime = None, date_to: datetime = None) -> Dict[str, float]:
+        """
+            Get the category breakdown data for a given date range
+        """
+        move_lines = self.env['account.move.line'].search([('date', '>=', date_from),
+                                                           ('date', '<=', date_to)])
+        sale_data = move_lines.filtered(lambda ml: ml.sale_line_ids)
+        
+        result = []
         for sale in sale_data:
             result.append({
                 'type': 'Sale',
