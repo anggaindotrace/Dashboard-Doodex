@@ -252,14 +252,15 @@ class UniversalDashboard(models.Model):
             SELECT so.amount_total
             FROM crm_lead cl
             INNER JOIN sale_order so ON so.opportunity_id = cl.id
-            WHERE cl.won_status = 'won' AND cl.date_last_stage_update BETWEEN %s AND %s
+            WHERE cl.won_status = 'won' AND so.date_order BETWEEN %s AND %s 
+            AND so.company_id = %s
         '''
         if date_from and date_to:
             results = self._execute_query(query, (date_from, date_to, company_id))
         else:
             results = self._execute_query(query, (company_id,))
         
-        total_amount = sum(r['amount_total'] for r in results)
+        total_amount = sum(r['amount_total'] for r in results) if results else 0
         
         return total_amount
 
