@@ -25,11 +25,12 @@ export class DashboardHomepage extends Component {
         this.state = useState({
             kpiData: null,
             salesPurchaseEvolution: null,
-            categoryBreakdownData: null
+            categoryBreakdownData: null,
+            stockCrmDistribution: null
         });
         onMounted(async () => {
             await this.graph.renderLineCharts(this.state.salesPurchaseEvolution);
-            await this.graph.renderComboCharts();
+            await this.graph.renderComboCharts(this.state.stockCrmDistribution);
             await this.graph.renderPieCharts(this.state.categoryBreakdownData);
             await this.graph.renderSankeyDiagram();
         });
@@ -55,7 +56,9 @@ export class DashboardHomepage extends Component {
             await this.getCategoryBreakdownData();
             await this.getStockCrmDistribution();
             await this.graph.renderLineCharts(this.state.salesPurchaseEvolution);
+            await this.graph.renderComboCharts(this.state.stockCrmDistribution);
             await this.graph.renderPieCharts(this.state.categoryBreakdownData);
+
         }
     }
 
@@ -117,7 +120,6 @@ export class DashboardHomepage extends Component {
                 kwargs: {}
             }).then(res => {
                 this.state.stockCrmDistribution = res;
-                console.log(this.state.stockCrmDistribution);
             });
         } catch (error) {
             console.log(error);

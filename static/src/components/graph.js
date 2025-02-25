@@ -118,8 +118,9 @@ export class Graph{
       legend.data.setAll(chart.series.values);
     }
 
-    async renderComboCharts() {
+    async renderComboCharts(data) {
         const root = await this.initChart("#distribution");
+
         var chart = root.container.children.push(
             am5xy.XYChart.new(root, {
               panX: false,
@@ -131,39 +132,6 @@ export class Graph{
             })
           );
           
-          var data = [
-            {
-              year: "2016",
-              stock: 23.5,
-              crm: 21.1,
-              bfr: 1200
-            },
-            {
-              year: "2017",
-              stock: 26.2,
-              crm: 30.5,
-              bfr: 1500
-            },
-            {
-              year: "2018",
-              stock: 30.1,
-              crm: 34.9,
-              bfr: 1800
-            },
-            {
-              year: "2019",
-              stock: 29.5,
-              crm: 31.1,
-              bfr: 1150
-            },
-            {
-              year: "2020",
-              stock: 30.6,
-              crm: 28.2,
-              bfr: 1680
-            },
-          ];
-          
           // Create axes
           // https://www.amcharts.com/docs/v5/charts/xy-chart/axes/
           var xRenderer = am5xy.AxisRendererX.new(root, {
@@ -172,7 +140,7 @@ export class Graph{
           });
           var xAxis = chart.xAxes.push(
             am5xy.CategoryAxis.new(root, {
-              categoryField: "year",
+              categoryField: "period",
               renderer: xRenderer,
               tooltip: am5.Tooltip.new(root, {})
             })
@@ -213,7 +181,7 @@ export class Graph{
                 xAxis: xAxis,
                 yAxis: yAxis,
                 valueYField: fieldName,
-                categoryXField: "year",
+                categoryXField: "period",
                 tooltip: am5.Tooltip.new(root, {
                   pointerOrientation: "horizontal",
                   labelText: "{name} in {categoryX}: {valueY} {info}"
@@ -232,7 +200,7 @@ export class Graph{
             series.appear();
           } 
           
-          makeBarSeries("Stock", "stock", "#f97316");
+          makeBarSeries("Stock", "stock_valuation", "#f97316");
           makeBarSeries("CRM", "crm", "#ef4444");
           
           var series2 = chart.series.push(
@@ -241,7 +209,7 @@ export class Graph{
               xAxis: xAxis,
               yAxis: yAxis2,
               valueYField: "bfr",
-              categoryXField: "year",
+              categoryXField: "period",
               tooltip: am5.Tooltip.new(root, {
                 pointerOrientation: "horizontal",
                 labelText: "{name} in {categoryX}: {valueY} {info}"
