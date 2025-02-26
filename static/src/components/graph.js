@@ -361,7 +361,8 @@ export class Graph{
           var selected;
           var types = this.generateSeriesData(data, series);
           series.data.setAll(generateChartData());
-      
+          series.appear();
+          chart.appear();
           //generate chart data
           function generateChartData() {
             var chartData = [];

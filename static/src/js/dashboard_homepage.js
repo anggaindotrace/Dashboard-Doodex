@@ -61,8 +61,8 @@ export class DashboardHomepage extends Component {
             await this.getStockCrmDistribution();
             await this.graph.renderLineCharts(this.state.salesPurchaseEvolution);
             await this.graph.renderComboCharts(this.state.stockCrmDistribution);
-            await this.graph.renderPieCharts(this.state.categoryBreakdownData, "#purchase_breakdown");
-            await this.graph.renderPieCharts(this.state.categoryBreakdownData, "#sales_breakdown");
+            await this.graph.renderPieCharts(this.state.categoryBreakdownDataPurchase, "#purchase_breakdown");
+            await this.graph.renderPieCharts(this.state.categoryBreakdownDataSales, "#sales_breakdown");
         }
     }
 
