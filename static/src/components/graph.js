@@ -52,9 +52,15 @@ export class Graph{
       var yAxis = chart.yAxes.push(
         am5xy.ValueAxis.new(root, {
           extraTooltipPrecision: 1,
-          renderer: am5xy.AxisRendererY.new(root, {})
+          renderer: am5xy.AxisRendererY.new(root, {
+          })
         })
       );
+
+      yAxis.get("renderer").grid.template.setAll({
+        strokeWidth: 0,
+        visible: false
+      });
       
       // Create X-Axis
       var xAxis = chart.xAxes.push(
@@ -63,14 +69,19 @@ export class Graph{
           renderer: am5xy.AxisRendererX.new(root, {
             minGridDistance: 20
           }),
+          tooltip: am5.Tooltip.new(root, {})
         })
       );
+      xAxis.get("renderer").grid.template.setAll({
+        strokeWidth: 0,
+        visible: false
+      });
       xAxis.data.setAll(data);
       
       // Create series
       
       var series = chart.series.push(
-        am5xy.LineSeries.new(root, {
+        am5xy.SmoothedXLineSeries.new(root, {
           name: "Sales",
           xAxis: xAxis,
           yAxis: yAxis,
@@ -78,15 +89,35 @@ export class Graph{
           categoryXField: "period",
           legendLabelText: "{name}: {categoryX}",
           legendRangeLabelText: "{name}",
-          stroke: "#2563eb",
-          fill: "#2563eb"
+          tooltip: am5.Tooltip.new(root, {
+            pointerOrientation: "horizontal",
+            labelText: "{name} in {categoryX}: {valueY} {info}"
+          }),
+          stroke: "#008080",
+          fill: "#008080"
         })
       );
+      
+      series.strokes.template.setAll({
+        strokeWidth: 4,
+      });
+
+      series.bullets.push(function () {
+        return am5.Bullet.new(root, {
+          locationY: 0,
+          sprite: am5.Circle.new(root, {
+            radius: 6,
+            stroke: root.interfaceColors.get("background"),
+            strokeWidth: 2,
+            fill: series.get("fill")
+          })
+        });
+      });
         
       series.data.setAll(data);
 
       var series2 = chart.series.push(
-        am5xy.LineSeries.new(root, {
+        am5xy.SmoothedXLineSeries.new(root, {
           name: "Purchase",
           xAxis: xAxis,
           yAxis: yAxis,
@@ -94,27 +125,47 @@ export class Graph{
           categoryXField: "period",
           legendLabelText: "{name}: {categoryX}",
           legendRangeLabelText: "{name}",
-          stroke: "#22c55e",
-          fill: "#22c55e"
+          tooltip: am5.Tooltip.new(root, {
+            pointerOrientation: "horizontal",
+            labelText: "{name} in {categoryX}: {valueY} {info}",
+          }),
+          stroke: "#F4D06F",
+          fill: "#F4D06F"
         })
       );
+
+      series2.strokes.template.setAll({
+        strokeWidth: 4,
+      });
+
+      series2.get("tooltip").label.setAll({
+        fill: am5.color("#000")
+      })
+
+      series2.bullets.push(function () {
+        return am5.Bullet.new(root, {
+          locationY: 0,
+          sprite: am5.Circle.new(root, {
+            radius: 6,
+            stroke: root.interfaceColors.get("background"),
+            strokeWidth: 2,
+            fill: series2.get("fill")
+          })
+        });
+      });
 
       series2.data.setAll(data);
       // Add cursor
       chart.set("cursor", am5xy.XYCursor.new(root, {
-        behavior: "zoomXY",
-        xAxis: xAxis
+        behavior: "zoomX",
+        
       }));
+      chart.zoomOutButton.set("forceHidden", true);
       
-      xAxis.set("tooltip", am5.Tooltip.new(root, {
-        themeTags: ["axis"]
+      var legend = chart.children.push(am5.Legend.new(root, {
+        centerX: am5.p50,
+        x: am5.p50
       }));
-      
-      yAxis.set("tooltip", am5.Tooltip.new(root, {
-        themeTags: ["axis"]
-      }));
-      
-      var legend = chart.children.push(am5.Legend.new(root, {}));
       legend.data.setAll(chart.series.values);
     }
 
@@ -173,6 +224,11 @@ export class Graph{
               })
             })
           );
+
+          yAxis2.get("renderer").grid.template.setAll({
+            strokeWidth: 0,
+            visible: false
+          })
           
           function makeBarSeries(name, fieldName, color){
             var series = chart.series.push(
@@ -200,8 +256,8 @@ export class Graph{
             series.appear();
           } 
           
-          makeBarSeries("Stock", "stock_valuation", "#008080");
-          makeBarSeries("CRM", "crm", "#6ebcb1");
+          makeBarSeries("Stock", "stock_valuation", "#004040");
+          makeBarSeries("CRM", "crm", "#01B8B8");
           
           var series2 = chart.series.push(
             am5xy.LineSeries.new(root, {
@@ -214,13 +270,13 @@ export class Graph{
                 pointerOrientation: "horizontal",
                 labelText: "{name} in {categoryX}: {valueY} {info}"
               }),
-              stroke: "#05665b",
-              fill: "#05665b"
+              stroke: "#F4D06F",
+              fill: "#F4D06F"
             })
           );
           
           series2.strokes.template.setAll({
-            strokeWidth: 3,
+            strokeWidth: 6,
             templateField: "strokeSettings"
           });
           
@@ -249,6 +305,8 @@ export class Graph{
             })
           );
           legend.data.setAll(chart.series.values);
+
+          chart.zoomOutButton.set("forceHidden", true);
           
           // Make stuff animate on load
           // https://www.amcharts.com/docs/v5/concepts/animations/
@@ -354,6 +412,12 @@ export class Graph{
               series.data.setAll(generateChartData());
             }
           });
+
+          series.get("colors").set("colors", [
+            am5.color("#004040"),
+            am5.color("#01B8B8"),
+            am5.color("#40C0C0")
+          ])
 
           // Define data
           // var data = await data;
@@ -478,11 +542,30 @@ export class Graph{
             sourceIdField: "from",
             targetIdField: "to",
             valueField: "value",
-            paddingRight: 50
+            nodeAlign: "left",
+            paddingRight: 100
           }));
+
+          series.nodes.get("colors").set("colors", [
+            am5.color("#004040"),
+            am5.color("#008080"),
+            am5.color("#01B8B8"),
+            am5.color("#40C0C0"),
+            am5.color("#80FFFF")
+          ])
           
-          series.nodes.get("colors").set("step", 2);
-          
+          series.nodes.get("colors").set("step", 1);
+
+          series.links.template.setAll({
+            fillStyle: "gradient",
+            controlPointDistance: 0.1
+          });
+
+          series.nodes.labels.template.setAll({
+            fontSize: 14,
+            maxWidth: 150,
+            oversizedBehavior: "wrap-no-break"
+          });
           
           // Set data
           // https://www.amcharts.com/docs/v5/charts/flow-charts/#Setting_data

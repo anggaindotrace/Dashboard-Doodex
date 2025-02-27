@@ -13,78 +13,100 @@
 				<div class="mx-3 my-3">
 					<div class="card-body">
 						<div class="row mb-3">
-							<div class="col-md-6 mb-md-0 mb-3">
-								<KPI name="'Total Revenue'" value="state.kpiData.revenue" percentage="state.kpiData.percentage.revenue" />
+							<div class="col-lg-6 pe-3">
+								<div class="d-flex flex-column flex-lg-row gap-3 w-100 mb-3">
+									<div class="kpi-fluid">
+										<KPI name="'Total Revenue'" value="state.kpiData.revenue" percentage="state.kpiData.percentage.revenue" />
+									</div>
+									<div class="kpi-fluid">
+										<KPI name="'BFR'" value="state.kpiData.bfr" percentage="state.kpiData.percentage.bfr" />
+									</div>
+								</div>
+								<div class="d-flex flex-column flex-lg-row gap-3 w-100">
+									<div class="kpi-fluid">
+										<KPI name="'Total Stock Value'" value="state.kpiData.stock_valuation" percentage="state.kpiData.percentage.stock_valuation" />
+									</div>
+									<div class="kpi-fluid mb-3 mb-lg-0">
+										<KPI name="'Number of CRM Opportunities'" value="state.kpiData.number_of_opportunities" percentage="state.kpiData.percentage.number_of_opportunities" />
+									</div>
+								</div>
 							</div>
-							<div class="col-md-6">
-								<KPI name="'BFR'" value="state.kpiData.bfr" percentage="state.kpiData.percentage.bfr" />
+							<div class="col-lg-6 ps-3 ps-lg-0">
+								<div class="d-flex flex-column flex-lg-row gap-3 w-100 mb-3">
+									<div class="kpi-fluid">
+										<KPI name="'Gross Margin'" value="state.kpiData.gross_profit_margin" percentage="state.kpiData.percentage.gross_profit_margin" />
+									</div>
+									<div class="kpi-fluid">
+										<KPI name="'Net Margin'" value="state.kpiData.net_profit_margin" percentage="state.kpiData.percentage.net_profit_margin" />
+									</div>
+								</div>
+								<div class="d-flex flex-column flex-lg-row gap-3 w-100">
+									<div class="kpi-fluid">
+										<KPI name="'Return on Investment'" value="state.kpiData.roi" percentage="state.kpiData.percentage.roi" />
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="row mb-4">
+							<div class="col px-md-3">
+								<div class="oe-border">
+									<div style="width: 100%; height: auto;">
+										<div>
+											<span class="fs-2 fw-bold text-dashboard-primary">
+												Sales and Purchase Evolution
+											</span>
+										</div>
+										<div id="sales_purchase_evolution" style="width: 100%; height: 300px;" />
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="row mb-4">
+							<div class="col px-md-3">
+								<div class="oe-border">
+									<div style="width: 100%; height: auto;">
+										<div>
+											<span class="fs-2 fw-bold text-dashboard-primary">
+												Stock Valuation, CRM distribution and BFR
+											</span>
+										</div>
+										<div id="distribution" style="width: 100%; height: 300px;" />
+									</div>
+								</div>
 							</div>
 						</div>
 						<div class="row mb-3">
-							<div class="col-md-4 mb-md-0 mb-3">
-								<KPI name="'Gross Margin'" value="state.kpiData.gross_profit_margin" percentage="state.kpiData.percentage.gross_profit_margin" />
-							</div>
-							<div class="col-md-4 mb-md-0 mb-3">
-								<KPI name="'Net Margin'" value="state.kpiData.net_profit_margin" percentage="state.kpiData.percentage.net_profit_margin" />
-							</div>
-							<div class="col-md-4">
-								<KPI name="'Return on Investment'" value="state.kpiData.roi" percentage="state.kpiData.percentage.roi" />
-							</div>
-						</div>
-						<div class="row mb-4">
-							<div class="col-md-6 mb-md-0 mb-3">
-								<KPI name="'Total Stock Value'" value="state.kpiData.stock_valuation" percentage="state.kpiData.percentage.stock_valuation" />
+							<div class="col-md-6 mb-3 mb-md-0">
+								<div class="oe-border">
+									<div>
+										<span class="fs-2 fw-bold">
+											Purchase Breakdown 
+										</span>
+									</div>
+									<div id="purchase_breakdown" style="width: 100%; height: 450px;" />
+								</div>
 							</div>
 							<div class="col-md-6">
-								<KPI name="'Number of CRM Opportunities'" value="state.kpiData.number_of_opportunities" percentage="state.kpiData.percentage.number_of_opportunities" />
-							</div>
-						</div>
-						<div class="row mb-4">
-							<div style="width: 100%; height: auto;">
-								<div>
-									<span class="fs-2 fw-bold">
-										Sales and Purchase Evolution
-									</span>
+								<div class="oe-border">
+									<div>
+										<span class="fs-2 fw-bold">
+											Sales Breakdown
+										</span>
+									</div>
+									<div id="sales_breakdown" style="width: 100%; height: 450px;" />
 								</div>
-								<div id="sales_purchase_evolution" style="width: 100%; height: 300px;" />
-							</div>
-						</div>
-						<div class="row mb-4">
-							<div style="width: 100%; height: auto;">
-								<div>
-									<span class="fs-2 fw-bold">
-										Stock Valuation, CRM distribution and BFR
-									</span>
-								</div>
-								<div id="distribution" style="width: 100%; height: 300px;" />
 							</div>
 						</div>
 						<div class="row">
-							<div class="col-md-6" style="height: 525px;">
-								<div>
-									<span class="fs-2 fw-bold">
-										Purchase Breakdown 
-									</span>
-								</div>
-								<div id="purchase_breakdown" style="width: 100%; height: 450px;" />
-							</div>
-							<div class="col-md-6" style="height: 525px;">
-								<div>
-									<span class="fs-2 fw-bold">
-										Sales Breakdown
-									</span>
-								</div>
-								<div id="sales_breakdown" style="width: 100%; height: 450px;" />
-							</div>
-						</div>
-						<div class="row">
-							<div class="col-12 mb-5" style="height: 500px;">
-								<div>
+							<div class="col-12 mb-5 px-md-3">
+								<div class="oe-border">
+									<div>
 									<span class="fs-2 fw-bold">
 										Monetary Flow
 									</span>
+									</div>
+									<div id="monetary_flow" style="width: 100%; height: 450px;" />
 								</div>
-								<div id="monetary_flow" style="width: 100%; height: 450px;" />
 							</div>
 						</div>
 					</div>

@@ -1,3 +1,5 @@
+$text-primary: #111827;
+
 .next-dashboard {
     height: 100%; 
     overflow-y: auto;
@@ -102,4 +104,67 @@
 
 .combined-width-button {
     width: 210px; /* Set the width of the last button to the combined width of the first two buttons */
+}
+
+.oe-border {
+    border: 2px solid map-get($colors, border);
+    background-color: #ffffff;
+    padding: 0.5rem;
+    border-radius: 8px;
+}
+
+.oe-header-title {
+    color: map-get($colors, text-primary);
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.oe-kpi-title {
+    color: map-get($colors, text-muted);
+    font-size: 0.7rem;
+    font-weight: 400;
+}
+
+.oe-kpi-value {
+    color: map-get($colors, text-primary);
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.text-dashboard-primary {
+    color: $text-primary;
+}
+
+@media (min-width: 992px) {
+    .oe-border {
+        border: 4px solid map-get($colors, border);
+        padding: 1rem;
+        border-radius: 12px
+    }
+
+    .oe-header-title {
+        font-size: 1.5rem;
+    }
+
+    .oe-kpi-title {
+        font-size: 1rem;
+    }
+
+    .oe-kpi-value {
+        font-size: 1.7rem;
+    }
+
+    .row > *:not(:first-child):not(:last-child) {
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+
+    .row > *:first-child {
+        padding-right: 0.5rem;
+    }
+
+    .row > *:last-child {
+        padding-left: 0.5rem;
+    }
+
 }
