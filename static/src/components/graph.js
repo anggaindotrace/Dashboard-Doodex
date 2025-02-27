@@ -280,7 +280,6 @@ export class Graph{
                     id: item.product_id,
                     name: item.product_name,
                     totalAmount: item.amount,
-                    moveLineId: item.move_line_id,
                     currency_symbol: item.currency_symbol
                 });
             } else {
@@ -377,7 +376,6 @@ export class Graph{
                     active: true
                   },
                   products: types[i].products,
-                  move_line_ids: types[i].products.map(product => product.moveLineId),
                   currency_symbol: types[i].currency_symbol,
                   parent_type: types[i].parent_type
                 });
@@ -397,6 +395,9 @@ export class Graph{
           function openModal(dataContext) {
             // Calculate the total amount sum
             const products = dataContext.products;
+            // Sort products by totalAmount in descending order
+            products.sort((a, b) => b.totalAmount - a.totalAmount);
+            
             const totalAmountSum = products.reduce((sum, product) => sum + product.totalAmount, 0);
         
             // Format number as monetary (1.002,400)

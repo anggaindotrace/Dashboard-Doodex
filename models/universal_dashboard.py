@@ -533,21 +533,22 @@ class UniversalDashboard(models.Model):
         """
             Get the category breakdown data for a given date range
         """
-        move_lines = self.env['account.move.line'].search([('date', '>=', date_from),
-                                                           ('date', '<=', date_to)])
-        purchase_data = move_lines.filtered(lambda ml: ml.purchase_order_id)
-        sale_data = move_lines.filtered(lambda ml: ml.sale_line_ids)
-        
+        # move_lines = self.env['account.move.line'].search([('date', '>=', date_from),
+        #                                                    ('date', '<=', date_to)])
+        purchase_ids = self.env['purchase.order'].search([('date_approve', '>=', date_from),
+                                                         ('date_approve', '<=', date_to)])
+        purchase_lines = purchase_ids.mapped('order_line')
+        # purchase_data = move_lines.filtered(lambda ml: ml.purchase_order_id)
+        # sale_data = move_lines.filtered(lambda ml: ml.sale_line_ids)
         result = []
-        for purchase in purchase_data:
+        for purchase in purchase_lines:
             result.append({
                 'type': 'Purchase',
-                'amount': abs(purchase.balance),
+                'amount': abs(purchase.price_subtotal),
                 'product_id': purchase.product_id.id,
                 'product_name': purchase.product_id.name,
                 'product_type': dict(purchase.product_id.product_tmpl_id._fields['type'].selection).get(purchase.product_id.product_tmpl_id.type),
-                'purchase_order_id': purchase.purchase_order_id.id,
-                'move_line_id': purchase.id,
+                'purchase_order_id': purchase.order_id.id,
                 'currency_id': purchase.currency_id.name,
                 'currency_symbol': purchase.currency_id.symbol
              })
@@ -561,18 +562,20 @@ class UniversalDashboard(models.Model):
         """
         move_lines = self.env['account.move.line'].search([('date', '>=', date_from),
                                                            ('date', '<=', date_to)])
+        sale_ids = self.env['sale.order'].search([('date_order', '>=', date_from),
+                                                   ('date_order', '<=', date_to)])
+        sale_lines = sale_ids.mapped('order_line')
         sale_data = move_lines.filtered(lambda ml: ml.sale_line_ids)
         
         result = []
-        for sale in sale_data:
+        for sale in sale_lines:
             result.append({
                 'type': 'Sale',
-                'amount': abs(sale.balance),
+                'amount': abs(sale.price_subtotal),
                 'product_id': sale.product_id.id,
                 'product_name': sale.product_id.name,
                 'product_type': dict(sale.product_id.product_tmpl_id._fields['type'].selection).get(sale.product_id.product_tmpl_id.type),
-                'sale_order_id': sale.sale_line_ids.mapped('order_id').ids,
-                'move_line_id': sale.id,
+                'sale_order_id': sale.order_id.id,
                 'currency_id': sale.currency_id.name,
                 'currency_symbol': sale.currency_id.symbol
             })
