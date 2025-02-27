@@ -581,4 +581,86 @@ export class Graph{
           // Make stuff animate on load
           series.appear(1000, 100);
     }
+
+    async renderSingleLineChart(referenceId) {
+        const root = await this.initChart(referenceId);
+        var data = [{
+          period: "25",
+          value: 20
+        }, {
+          period: "26",
+          value: 50
+        }, {
+          period: "27",
+          value: 30
+        }, {
+          period: "28",
+          value: 60
+        }, {
+          period: "29",
+          value: 40
+        }];
+
+        var chart = root.container.children.push( 
+          am5xy.XYChart.new(root, {
+            panY: false,
+            wheelY: "zoomX",
+            layout: root.verticalLayout,
+            maxTooltipDistance: 0
+          }) 
+        );
+  
+        // Create Y-axis
+        var yAxis = chart.yAxes.push(
+          am5xy.ValueAxis.new(root, {
+            extraTooltipPrecision: 1,
+            renderer: am5xy.AxisRendererY.new(root, {
+            })
+          })
+        );
+  
+        yAxis.get("renderer").grid.template.setAll({
+          strokeWidth: 0,
+          visible: false
+        });
+
+        yAxis.get("renderer").labels.template.set("visible", false);
+        
+        // Create X-Axis
+        var xAxis = chart.xAxes.push(
+          am5xy.CategoryAxis.new(root, {
+            categoryField: "period",
+            renderer: am5xy.AxisRendererX.new(root, {
+              minGridDistance: 20
+            }),
+            tooltip: am5.Tooltip.new(root, {})
+          })
+        );
+        xAxis.get("renderer").grid.template.setAll({
+          strokeWidth: 0,
+          visible: false
+        });
+        xAxis.get("renderer").labels.template.set("visible", false);
+        xAxis.data.setAll(data);
+        
+        // Create series
+        
+        var series = chart.series.push(
+          am5xy.SmoothedXLineSeries.new(root, {
+            name: "ROI",
+            xAxis: xAxis,
+            yAxis: yAxis,
+            valueYField: "value",
+            categoryXField: "period",
+            stroke: "#008080",
+            fill: "#008080"
+          })
+        );
+        
+        series.strokes.template.setAll({
+          strokeWidth: 2,
+        });
+          
+        series.data.setAll(data);
+    }
 }

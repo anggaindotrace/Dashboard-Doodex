@@ -31,6 +31,7 @@ export class DashboardHomepage extends Component {
         });
         onMounted(async () => {
             await this.graph.renderLineCharts(this.state.salesPurchaseEvolution);
+            await this.graph.renderSingleLineChart("#roi_chart");
             await this.graph.renderComboCharts(this.state.stockCrmDistribution);
             await this.graph.renderPieCharts(this.state.categoryBreakdownDataPurchase, "#purchase_breakdown");
             await this.graph.renderPieCharts(this.state.categoryBreakdownDataSales, "#sales_breakdown");
@@ -60,6 +61,7 @@ export class DashboardHomepage extends Component {
             await this.getCategoryBreakdownDataSales();
             await this.getStockCrmDistribution();
             await this.graph.renderLineCharts(this.state.salesPurchaseEvolution);
+            await this.graph.renderSingleLineChart("#roi_chart");
             await this.graph.renderComboCharts(this.state.stockCrmDistribution);
             await this.graph.renderPieCharts(this.state.categoryBreakdownDataPurchase, "#purchase_breakdown");
             await this.graph.renderPieCharts(this.state.categoryBreakdownDataSales, "#sales_breakdown");
