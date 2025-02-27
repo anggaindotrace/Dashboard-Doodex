@@ -1,4 +1,11 @@
-$text-primary: #111827;
+$colors: (
+    navbar-border: #d8dadd,
+    border: #E5E7EB,
+    primary: #008080,
+    dark: #004040,
+    text-primary: #111827,
+    text-muted: #6B7280
+);
 
 .next-dashboard {
     height: 100%; 
@@ -132,7 +139,7 @@ $text-primary: #111827;
 }
 
 .text-dashboard-primary {
-    color: $text-primary;
+    color: map-get($colors, text-primary);
 }
 
 @media (min-width: 992px) {
