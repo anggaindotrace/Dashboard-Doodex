@@ -582,24 +582,8 @@ export class Graph{
           series.appear(1000, 100);
     }
 
-    async renderSingleLineChart(referenceId) {
+    async renderSingleLineChart(data, referenceId) {
         const root = await this.initChart(referenceId);
-        var data = [{
-          period: "25",
-          value: 20
-        }, {
-          period: "26",
-          value: 50
-        }, {
-          period: "27",
-          value: 30
-        }, {
-          period: "28",
-          value: 60
-        }, {
-          period: "29",
-          value: 40
-        }];
 
         var chart = root.container.children.push( 
           am5xy.XYChart.new(root, {
@@ -650,7 +634,7 @@ export class Graph{
             name: "ROI",
             xAxis: xAxis,
             yAxis: yAxis,
-            valueYField: "value",
+            valueYField: "roi",
             categoryXField: "period",
             stroke: "#008080",
             fill: "#008080"

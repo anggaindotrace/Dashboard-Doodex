@@ -581,3 +581,107 @@ class UniversalDashboard(models.Model):
             })
 
         return result
+
+    def _build_financial_breakdown_query(self, period_unit: str, account_types: list, company_id: int) -> str:
+        """
+            Build a SQL query to get the account balance
+            args:
+                account_types (list): The type of the account
+            returns:
+                str: The SQL query
+        """
+        query = """
+            SELECT 
+                EXTRACT(%s FROM aml.date) AS period,
+                SUM(aml.credit) AS credit,
+                SUM(aml.debit) AS debit,
+                SUM(aml.balance) AS balance,
+                aa.account_type as account_type
+            FROM account_move_line aml
+            INNER JOIN account_account aa ON aml.account_id = aa.id
+            INNER JOIN account_move am ON aml.move_id = am.id
+            WHERE aa.account_type IN %s AND am.company_id = %s
+        """
+        return query
+
+    @api.model
+    def get_roi_data(self, period_type: str, date_from: datetime = None, date_to: datetime = None) -> Dict[str, float]:
+        """
+            Get the roi data for a given date range
+        """
+        period_units = {
+            'month': 'DAY',
+            'quarter': 'WEEK',
+            'year': 'MONTH'
+        }
+    
+        period_unit = period_units.get(period_type)
+        if not period_unit:
+            raise ValueError(f"Invalid period_type: {period_type}")
+
+        company_id = self.env.user.company_id.id
+        _logger.info(f"=======================================company_id: {company_id}")
+        query = self._build_financial_breakdown_query(period_unit, ['income','expense_direct_cost','expense','income_other','expense_depreciation','asset_cash','asset_current','asset_non_current','asset_fixed','asset_receivable','asset_prepayments'], company_id)
+        if date_from and date_to:
+            query += " AND aml.date BETWEEN %s AND %s GROUP BY period, account_type ORDER BY period"
+            results = self._execute_query(query, (period_unit, ('income','expense_direct_cost','expense','income_other','expense_depreciation','asset_cash','asset_current','asset_non_current','asset_fixed','asset_receivable','asset_prepayments',), company_id, date_from, date_to))
+        else:
+            results = self._execute_query(query, (period_unit, ('income','expense_direct_cost','expense','income_other','expense_depreciation','asset_cash','asset_current','asset_non_current','asset_fixed','asset_receivable','asset_prepayments',), company_id))
+        
+        # Group results by period
+        period_data = {}
+        for row in results:
+            period = row['period']
+            if period not in period_data:
+                period_data[period] = {
+                    'revenue': 0,
+                    'cost_of_revenue': 0,
+                    'operating_expenses': 0,
+                    'other_income': 0,
+                    'other_expenses': 0,
+                    'assets': 0
+                }
+            
+            account_type = row['account_type']
+            
+            # Handle income accounts (credit - debit)
+            if account_type == 'income':
+                period_data[period]['revenue'] += row['credit'] - row['debit']
+            #handle expense accounts
+            elif account_type == 'expense_direct_cost':
+                period_data[period]['cost_of_revenue'] += row['balance']
+            elif account_type == 'expense':
+                period_data[period]['operating_expenses'] += row['balance']
+            elif account_type == 'income_other':
+                period_data[period]['other_income'] += row['balance'] 
+            elif account_type == 'expense_depreciation':
+                period_data[period]['other_expenses'] += row['balance']
+            # Handle asset accounts (use balance)
+            elif account_type.startswith('asset_'):
+                period_data[period]['assets'] += row['balance']
+        
+        # Calculate ROI for each period
+        roi_data = []
+        for period, data in sorted(period_data.items()):
+            # Calculate financial metrics
+            revenue = data['revenue']
+            cost_of_revenue = data['cost_of_revenue']
+            operating_expenses = data['operating_expenses']
+            other_income = data['other_income']
+            other_expenses = data['other_expenses']
+            total_assets = data['assets']
+            
+            # Calculate profits
+            gross_profit = revenue - cost_of_revenue
+            operating_profit = gross_profit - operating_expenses
+            net_profit = operating_profit + other_income - other_expenses
+            
+            # Calculate ROI
+            roi = (net_profit / total_assets) * 100 if total_assets else 0
+            
+            roi_data.append({
+                'period': period,
+                'roi': round(roi, 2)
+            })
+        _logger.info(f"=======================================roi_data: {roi_data}")
+        return roi_data

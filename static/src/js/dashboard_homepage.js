@@ -27,11 +27,12 @@ export class DashboardHomepage extends Component {
             salesPurchaseEvolution: null,
             stockCrmDistribution: null,
             categoryBreakdownDataPurchase: null,
-            categoryBreakdownDataSales: null
+            categoryBreakdownDataSales: null,
+            roiData: null
         });
         onMounted(async () => {
             await this.graph.renderLineCharts(this.state.salesPurchaseEvolution);
-            await this.graph.renderSingleLineChart("#roi_chart");
+            await this.graph.renderSingleLineChart(this.state.roiData,"#roi_chart");
             await this.graph.renderComboCharts(this.state.stockCrmDistribution);
             await this.graph.renderPieCharts(this.state.categoryBreakdownDataPurchase, "#purchase_breakdown");
             await this.graph.renderPieCharts(this.state.categoryBreakdownDataSales, "#sales_breakdown");
@@ -43,6 +44,7 @@ export class DashboardHomepage extends Component {
             await this.getStockCrmDistribution();
             await this.getCategoryBreakdownDataPurchase();
             await this.getCategoryBreakdownDataSales();
+            await this.getRoiData();
         });
     }
 
@@ -60,8 +62,9 @@ export class DashboardHomepage extends Component {
             await this.getCategoryBreakdownDataPurchase();
             await this.getCategoryBreakdownDataSales();
             await this.getStockCrmDistribution();
+            await this.getRoiData();
             await this.graph.renderLineCharts(this.state.salesPurchaseEvolution);
-            await this.graph.renderSingleLineChart("#roi_chart");
+            await this.graph.renderSingleLineChart(this.state.roiData,"#roi_chart");
             await this.graph.renderComboCharts(this.state.stockCrmDistribution);
             await this.graph.renderPieCharts(this.state.categoryBreakdownDataPurchase, "#purchase_breakdown");
             await this.graph.renderPieCharts(this.state.categoryBreakdownDataSales, "#sales_breakdown");
@@ -143,6 +146,22 @@ export class DashboardHomepage extends Component {
                 kwargs: {}
             }).then(res => {
                 this.state.categoryBreakdownDataSales = res;
+            });
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    async getRoiData(){
+        let options = this.options.options;
+        try {
+            await rpc("/web/dataset/call_kw/universal.dashboard/get_roi_data", {
+                model: "universal.dashboard",
+                method: "get_roi_data",
+                args: [options.date.period_type, options.date.date_from, options.date.date_to],
+                kwargs: {}
+            }).then(res => {
+                this.state.roiData = res;
             });
         } catch (error) {
             console.log(error);
