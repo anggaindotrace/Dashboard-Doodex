@@ -588,7 +588,7 @@ export class Graph{
         var chart = root.container.children.push( 
           am5xy.XYChart.new(root, {
             panY: false,
-            wheelY: "zoomX",
+            wheelY: "none",
             layout: root.verticalLayout,
             maxTooltipDistance: 0
           }) 
@@ -646,5 +646,53 @@ export class Graph{
         });
           
         series.data.setAll(data);
+
+        series.bullets.push(function (_root, _series, dataItem) {
+          if(dataItem.get("categoryX") === data[0].period || dataItem.get("categoryX") === data[data.length - 1].period){
+            return am5.Bullet.new(root, {
+              locationY: 0,
+              sprite: am5.Circle.new(root, {
+                radius: 6,
+                stroke: root.interfaceColors.get("background"),
+                strokeWidth: 2,
+                fill: series.get("fill")
+              })
+            });
+          }
+        });
+
+        series.bullets.push(function (_root, _series, dataItem) {
+          if(dataItem.get("categoryX") === data[0].period || dataItem.get("categoryX") === data[data.length - 1].period){
+            if(dataItem.dataContext.roi > 50){
+              return am5.Bullet.new(root, {
+                sprite: am5.Label.new(root, {
+                  text: `${dataItem.get("valueY")}%`,
+                  fill: series.get("fill"),
+                  fontSize: 10,
+                  centerX: am5.p0,
+                  centerY: am5.p100,
+                  dx: -10,
+                  dy: 0,
+                })
+              });
+            }
+            else {
+              return am5.Bullet.new(root, {
+                sprite: am5.Label.new(root, {
+                  text: `${dataItem.get("valueY")}%`,
+                  fill: series.get("fill"),
+                  fontSize: 10,
+                  centerX: am5.p0,
+                  centerY: am5.p100,
+                  dx: -15,
+                  dy: -0,
+                })
+              });
+            }
+          }
+        });
+
+        series.appear();
+        chart.appear();
     }
 }

@@ -620,7 +620,6 @@ class UniversalDashboard(models.Model):
             raise ValueError(f"Invalid period_type: {period_type}")
 
         company_id = self.env.user.company_id.id
-        _logger.info(f"=======================================company_id: {company_id}")
         query = self._build_financial_breakdown_query(period_unit, ['income','expense_direct_cost','expense','income_other','expense_depreciation','asset_cash','asset_current','asset_non_current','asset_fixed','asset_receivable','asset_prepayments'], company_id)
         if date_from and date_to:
             query += " AND aml.date BETWEEN %s AND %s GROUP BY period, account_type ORDER BY period"
@@ -683,5 +682,5 @@ class UniversalDashboard(models.Model):
                 'period': period,
                 'roi': round(roi, 2)
             })
-        _logger.info(f"=======================================roi_data: {roi_data}")
+
         return roi_data
