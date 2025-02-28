@@ -32,6 +32,7 @@
             'Dashboard-Doodex/static/src/xml/**/*'
         ],
     },
+    'icon': 'Dashboard-Doodex/static/description/icon.png',
     'installable': True,
     'application': True,
 }
