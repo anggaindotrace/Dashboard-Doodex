@@ -49,7 +49,7 @@ export class SalesPerformanceDashboard extends Component {
             await this.graph.renderTopSellingProducts(this.state.top3ProductsBySales, 'value');
             this.state.customerList = this.getCustomerList(this.state.salesPerformanceData);
             await this.graph.renderCombinationChart('#sales-temporal-analysis');
-            await this.graph.renderHierarchyChart('#distribution-analysis');
+            await this.graph.renderHierarchyChart(this.state.categoryProductHierarchy,'#distribution-analysis');
 
             await this.graph.renderBarChart(this.state.totalAmountBySalesperson, '#revenue-by-salesperson');
             await this.graph.renderBarChart(this.state.totalSaleOrderIdBySalesperson, '#number-of-quotes-by-salesperson');
@@ -100,12 +100,10 @@ export class SalesPerformanceDashboard extends Component {
             this.state.dateFilterHeader = `${formatDate(dateFromInput)} - ${formatDate(dateToInput)}`;
             averagetype = 'weekly';
         }
-        console.log("datefrom", this.state.dateFrom);
-        console.log("dateTo", this.state.dateTo);
         await this.getSalesPerformanceData();
         await this.graph.renderTopSellingProducts(this.state.top3ProductsBySales, this.state.isValueActive ? 'value' : 'quantity');
         await this.graph.renderCombinationChart('#sales-temporal-analysis');
-        await this.graph.renderHierarchyChart('#distribution-analysis');
+        await this.graph.renderHierarchyChart(this.state.categoryProductHierarchy, '#distribution-analysis');
         await this.graph.renderBarChart(this.state.totalAmountBySalesperson, '#revenue-by-salesperson');
         await this.graph.renderBarChart(this.state.totalSaleOrderIdBySalesperson, '#number-of-quotes-by-salesperson');
         this.state.averageSaleOrderLine = await this.getAverageSaleOrderByTimeGroup(this.state.salesPerformanceData, averagetype);
@@ -124,6 +122,7 @@ export class SalesPerformanceDashboard extends Component {
         await this.graph.renderTopSellingProducts(this.state.top3ProductsBySales, this.state.isValueActive ? 'value' : 'quantity');
         await this.graph.renderBarChart(this.state.totalAmountBySalesperson, '#revenue-by-salesperson');
         await this.graph.renderBarChart(this.state.totalSaleOrderIdBySalesperson, '#number-of-quotes-by-salesperson');
+        await this.graph.renderHierarchyChart(this.state.categoryProductHierarchy, '#distribution-analysis');
         this.state.averageSaleOrderLine = await this.getAverageSaleOrderByTimeGroup(this.state.salesPerformanceData, this.state.averagetype);
         await this.graph.renderAverageSaleOrderLine(this.state.averageSaleOrderLine);
     }
@@ -141,6 +140,7 @@ export class SalesPerformanceDashboard extends Component {
         await this.graph.renderTopSellingProducts(this.state.top3ProductsBySales, this.state.isValueActive ? 'value' : 'quantity');
         await this.graph.renderBarChart(this.state.totalAmountBySalesperson, '#revenue-by-salesperson');
         await this.graph.renderBarChart(this.state.totalSaleOrderIdBySalesperson, '#number-of-quotes-by-salesperson');
+        await this.graph.renderHierarchyChart(this.state.categoryProductHierarchy, '#distribution-analysis');
         this.state.averageSaleOrderLine = await this.getAverageSaleOrderByTimeGroup(this.state.salesPerformanceData, this.state.averagetype);
         await this.graph.renderAverageSaleOrderLine(this.state.averageSaleOrderLine);
     }
@@ -157,6 +157,7 @@ export class SalesPerformanceDashboard extends Component {
         await this.graph.renderTopSellingProducts(this.state.top3ProductsBySales, this.state.isValueActive ? 'value' : 'quantity');
         await this.graph.renderBarChart(this.state.totalAmountBySalesperson, '#revenue-by-salesperson');
         await this.graph.renderBarChart(this.state.totalSaleOrderIdBySalesperson, '#number-of-quotes-by-salesperson');
+        await this.graph.renderHierarchyChart(this.state.categoryProductHierarchy, '#distribution-analysis');
         this.state.averageSaleOrderLine = await this.getAverageSaleOrderByTimeGroup(this.state.salesPerformanceData, this.state.averagetype);
         await this.graph.renderAverageSaleOrderLine(this.state.averageSaleOrderLine);
     }
@@ -366,7 +367,6 @@ export class SalesPerformanceDashboard extends Component {
         if (!salesPerformanceData || salesPerformanceData.length === 0) {
             return [];
         }
-        console.log("salesPerformanceData", salesPerformanceData);
         // Aggregate sales data by product
         const productSales = salesPerformanceData.reduce((products, sale) => {
             if (sale.product_name) {
@@ -467,6 +467,41 @@ export class SalesPerformanceDashboard extends Component {
         return formattedData;
     }
 
+    getCategoryProductHierarchy(salesPerformanceData) {
+        if (!salesPerformanceData || salesPerformanceData.length === 0) {
+            return [];
+        }
+        const categoryList = salesPerformanceData.reduce((categoryMap, sale) => {
+            if (sale.product_category && sale.state === 'sale') {
+                if (!categoryMap[sale.product_category]) {
+                    categoryMap[sale.product_category] = {
+                       "name": sale.product_category,
+                       "children": []
+                    };
+                }
+                if(!categoryMap[sale.product_category].children.find(child => child.name === Object.values(sale.product_name)[0])) {
+                    categoryMap[sale.product_category].children.push({
+                        "name": Object.values(sale.product_name)[0],
+                        "quantity": 0,
+                    });
+                }
+                categoryMap[sale.product_category].children.findIndex((child) =>{
+                    if(child.name === Object.values(sale.product_name)[0]) {
+                        child.quantity += sale.quantity;
+                    }
+                })
+            }
+            return categoryMap;
+        }, {});
+        const formattedCategoryList = Object.values(categoryList).map(category => {
+            return{
+                name: category.name,
+                children: category.children
+            };
+        });
+        return formattedCategoryList;
+    }
+
     async getSalesPerformanceData() {
         try {
             await rpc("/web/dataset/call_kw/sales.dashboard/get_sales_performance_data", {
@@ -485,6 +520,7 @@ export class SalesPerformanceDashboard extends Component {
                 this.state.top3ProductsBySales = this.getTop3ProductsBySales(res[0]);
                 this.state.totalAmountBySalesperson = this.getTotalAmountBySalesperson(res[0]);
                 this.state.totalSaleOrderIdBySalesperson = this.getTotalSaleOrderIdBySalesperson(res[0]);
+                this.state.categoryProductHierarchy = this.getCategoryProductHierarchy(res[0]);
             });
         } catch (error) {
             console.log(error);
@@ -498,7 +534,6 @@ export class SalesPerformanceDashboard extends Component {
                 args: [[]],
                 kwargs: {}
             }).then(res => {
-                console.log("res", res);
                 this.state.productList = res.reduce((productMap, product) => {
                     productMap[product.product_id] = product.product_name['en_US'] || Object.values(product.product_name)[0];;
                     return productMap;

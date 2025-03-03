@@ -16,7 +16,7 @@
 							<div class="d-flex gap-2 mt-2">
 								<div class="flex-grow-1">
 									<div class="dropdown">
-										<button class="btn btn-secondary btn-lg" type="button" id="dateDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="width: 100%; height: auto;">
+										<button class="btn button-secondary btn-lg" type="button" id="dateDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="width: 100%; height: auto;">
 											Period : <span t-esc="state.dateFilterHeader"/>
 										</button>
 										<ul class="dropdown-menu" aria-labelledby="dateDropdown" style="width: 100%;">
@@ -28,11 +28,11 @@
 											<li><a class="dropdown-item" href="#" t-on-click="() => this.onDateFilterSelect('Last Financial Year')">Last Financial Year</a></li>
 											<li class="dropdown-divider"></li>
 											<li class="px-3">
-												<div class="d-flex justify-content-between">
+												<div class="d-flex justify-content-between align-items-center gap-2">
 													<input id="dateFrom" type="date" class="form-control" t-att-value="state.dateFrom"/>
 													<span>to</span>
 													<input id="dateTo" type="date" class="form-control" t-att-value="state.dateTo"/>
-													<button class="btn btn-primary" t-on-click="() => this.onDateFilterSelect('Custom')">Apply</button>
+													<button class="btn button-primary" t-on-click="() => this.onDateFilterSelect('Custom')">Apply</button>
 												</div>
 											</li>
 										</ul>
@@ -40,7 +40,7 @@
 								</div>
 								<div class="flex-grow-1">
 									<div class="dropdown">
-										<button class="btn btn-secondary btn-lg" type="button" id="customerDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="width: 100%; height: auto;">
+										<button class="btn button-secondary btn-lg" type="button" id="customerDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="width: 100%; height: auto;">
 											Customer : <span t-esc="state.customerNameHeader"/>
 										</button>
 										<ul class="dropdown-menu" aria-labelledby="customerDropdown" style="width: 100%;">
@@ -61,7 +61,7 @@
 								</div>
 								<div class="flex-grow-1">
 									<div class="dropdown">
-										<button class="btn btn-secondary btn-lg" type="button" id="productDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="width: 100%; height: auto;">
+										<button class="btn button-secondary btn-lg" type="button" id="productDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="width: 100%; height: auto;">
 											Product : <span t-esc="state.productNameHeader"/>
 										</button>
 										<ul class="dropdown-menu" aria-labelledby="productDropdown" style="width: 100%;">
@@ -82,7 +82,7 @@
 								</div>
 								<div class="flex-grow-1">
 									<div class="dropdown">
-										<button class="btn btn-secondary btn-lg" type="button" id="categoryDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="width: 100%; height: auto;">
+										<button class="btn button-secondary btn-lg" type="button" id="categoryDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="width: 100%; height: auto;">
 											Category : <span t-esc="state.productCategoryNameHeader"/>
 										</button>
 										<ul class="dropdown-menu" aria-labelledby="categoryDropdown" style="width: 100%;">

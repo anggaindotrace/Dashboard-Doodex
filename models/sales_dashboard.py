@@ -40,9 +40,9 @@ class SalesDashboard(models.Model):
             LEFT JOIN sale_order_line_invoice_rel solir ON sol.id = solir.order_line_id
             LEFT JOIN account_move_line aml ON solir.invoice_line_id= aml.id
             LEFT JOIN account_move am ON aml.move_id = am.id
-            WHERE so.date_order::date BETWEEN %s AND %s
+            WHERE so.date_order::date BETWEEN %s AND %s AND sol.company_id = %s
         """
-        params = [date_from, date_to]
+        params = [date_from, date_to, self.env.user.company_id.id]
         if product_id:
             query += " AND pt.id = %s"
             params.append(product_id)
