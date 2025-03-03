@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates id="sales_performance_dashboard" xml:space="preserve">
+	<t t-name="SalesPerformanceDashboard">
+		<div class="separator">
+		</div>
+		<div class="next-dashboard">
+			<div class="py-3" t-ref="root">
+				<div class="mx-3">
+					<div class="row mb-2">
+						<div class="col" style="padding: 0 1rem !important;">
+							<div class="oe-border">
+								<span class="oe-header-title">
+									Sales Performance Dashboard
+								</span>
+							</div>
+							<div class="d-flex gap-2 mt-2">
+								<div class="flex-grow-1">
+									<div class="dropdown">
+										<button class="btn btn-secondary btn-lg" type="button" id="dateDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="width: 100%; height: auto;">
+											Period : <span t-esc="state.dateFilterHeader"/>
+										</button>
+										<ul class="dropdown-menu" aria-labelledby="dateDropdown" style="width: 100%;">
+											<li><a class="dropdown-item" href="#" t-on-click="() => this.onDateFilterSelect('This Month')">This Month</a></li>
+											<li><a class="dropdown-item" href="#" t-on-click="() => this.onDateFilterSelect('This Quarter')">This Quarter</a></li>
+											<li><a class="dropdown-item" href="#" t-on-click="() => this.onDateFilterSelect('This Financial Year')">This Financial Year</a></li>
+											<li><a class="dropdown-item" href="#" t-on-click="() => this.onDateFilterSelect('Last Month')">Last Month</a></li>
+											<li><a class="dropdown-item" href="#" t-on-click="() => this.onDateFilterSelect('Last Quarter')">Last Quarter</a></li>
+											<li><a class="dropdown-item" href="#" t-on-click="() => this.onDateFilterSelect('Last Financial Year')">Last Financial Year</a></li>
+											<li class="dropdown-divider"></li>
+											<li class="px-3">
+												<div class="d-flex justify-content-between">
+													<input id="dateFrom" type="date" class="form-control" t-att-value="state.dateFrom"/>
+													<span>to</span>
+													<input id="dateTo" type="date" class="form-control" t-att-value="state.dateTo"/>
+													<button class="btn btn-primary" t-on-click="() => this.onDateFilterSelect('Custom')">Apply</button>
+												</div>
+											</li>
+										</ul>
+									</div>
+								</div>
+								<div class="flex-grow-1">
+									<div class="dropdown">
+										<button class="btn btn-secondary btn-lg" type="button" id="customerDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="width: 100%; height: auto;">
+											Customer : <span t-esc="state.customerNameHeader"/>
+										</button>
+										<ul class="dropdown-menu" aria-labelledby="customerDropdown" style="width: 100%;">
+											<li>
+												<a class="dropdown-item" href="#" t-on-click="() => this.onCustomerSelect('All')">
+													All
+												</a>
+											</li>
+											<t t-foreach="Object.keys(state.customerList)" t-as="customerId" t-key="customerId">
+												<li>
+													<a class="dropdown-item" href="#" t-on-click="() => this.onCustomerSelect(customerId)">
+														<t t-esc="state.customerList[customerId]"/>
+													</a>
+												</li>
+											</t>
+										</ul>
+									</div>
+								</div>
+								<div class="flex-grow-1">
+									<div class="dropdown">
+										<button class="btn btn-secondary btn-lg" type="button" id="productDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="width: 100%; height: auto;">
+											Product : <span t-esc="state.productNameHeader"/>
+										</button>
+										<ul class="dropdown-menu" aria-labelledby="productDropdown" style="width: 100%;">
+											<li>
+												<a class="dropdown-item" href="#" t-on-click="() => this.onProductSelect('All')">
+													All
+												</a>
+											</li>
+											<t t-foreach="Object.keys(state.productList)" t-as="productId" t-key="productId">
+												<li>
+													<a class="dropdown-item" href="#" t-on-click="() => this.onProductSelect(productId)">
+														<t t-esc="state.productList[productId]"/>
+													</a>
+												</li>
+											</t>
+										</ul>
+									</div>
+								</div>
+								<div class="flex-grow-1">
+									<div class="dropdown">
+										<button class="btn btn-secondary btn-lg" type="button" id="categoryDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="width: 100%; height: auto;">
+											Category : <span t-esc="state.productCategoryNameHeader"/>
+										</button>
+										<ul class="dropdown-menu" aria-labelledby="categoryDropdown" style="width: 100%;">
+											<li>
+												<a class="dropdown-item" href="#" t-on-click="() => this.onProductCategorySelect('-')">
+													-
+												</a>
+											</li>
+											<t t-foreach="Object.keys(state.productCategoryList)" t-as="categoryId" t-key="categoryId">
+												<li>
+													<a class="dropdown-item" href="#" t-on-click="() => this.onProductCategorySelect(categoryId)">
+														<t t-esc="state.productCategoryList[categoryId]"/>
+													</a>
+												</li>
+											</t>
+										</ul>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="row mb-3">
+						<div class="col-md-4 mb-md-0 mb-3">
+							<KPI name="'Total Validated Sale Order'" value="state.totalSalesValidatedAmount" />
+						</div>
+						<div class="col-md-4 mb-md-0 mb-3">
+							<KPI name="'Total Validated Invoice'" value="state.totalValidatedInvoice" />
+						</div>
+						<div class="col-md-4">
+							<KPI name="'Total Overdue Invoice'" value="state.totalOverdueInvoice" />
+						</div>
+					</div>
+					<div class="row mb-4">
+						<div class="col-md-4 mb-md-0 mb-3">
+							<div class="oe-border mb-3">
+								<div class="d-flex flex-column gap-2">
+									<span class="oe-kpi-title text-muted">
+										Quote to Order Conversion Rate
+									</span>
+									<span class="oe-kpi-value" >
+										<t t-esc="state.quoteToOrderConversionRate"/>
+									</span>
+									<div class="progress rounded-pill" style="height: 16px;">
+										<div class="progress-bar rounded-pill" role="progressbar" t-att-style="'width: ' + state.quoteToOrderConversionRate + '; background-color: #008080'" t-att-aria-valuenow="state.quoteToOrderConversionRate" aria-valuemin="0" aria-valuemax="100"></div>
+									</div>
+								</div>
+							</div>
+							<div class="oe-border">
+								<div class="d-flex flex-row gap-2">
+									<div class="d-flex flex-column gap-2">
+										<span class="oe-kpi-title text-muted">
+											Average Sale Order
+										</span>
+										<span class="oe-kpi-value">
+											<t t-esc="state.averageSaleOrder"/>
+										</span>
+									</div>
+									<div class="d-flex justify-content-center flex-grow-1">
+										<div id="average-sales-line-chart" style="width: 100%;"></div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="col-md-8">
+							<div class="oe-border h-100">
+								<div class="d-flex flex-column gap-2">
+									<span class="oe-kpi-title text-muted">
+										Top 3 Product by Sales
+									</span>
+									<div class="d-flex justify-content-end">
+										<button class="btn btn-sm" t-att-class="{'button-outline-primary': !state.isValueActive, 'button-primary': state.isValueActive}" t-on-click="filterByValue">Value</button>
+										<button class="btn btn-sm ms-2" t-att-class="{'button-outline-primary': !state.isQtyActive, 'button-primary': state.isQtyActive}" t-on-click="filterByQty">Quantity</button>
+									</div>
+								</div>
+								<div id="top-3-sales-by-product" style="height: 85%; width: 100%;"></div>
+							</div>
+						</div>
+					</div>
+					<div class="row mb-4">
+						<div class="col px-lg-3">
+							<div class="oe-border">
+								<div class="d-flex flex-column gap-2">
+									<span class="dashboard-card-title fw-bold fs-2">
+										Sales Temporal Analysis
+									</span>
+									<div id="sales-temporal-analysis" style="height: 477px; width: 100%;"></div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="row mb-4">
+						<div class="col px-lg-3">
+							<div class="oe-border">
+								<div class="d-flex flex-column gap-2">
+									<span class="dashboard-card-title fw-bold fs-2">
+										Distribution Analysis
+									</span>
+									<div id="distribution-analysis" style="height: 477px; width: 100%;"></div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-lg-6 ps-lg-3">
+							<div class="oe-border">
+								<div class="d-flex flex-column gap-2">
+									<span class="dashboard-card-title fw-bold fs-2">
+										Revenue by Salesperson
+									</span>
+									<div id="revenue-by-customer" style="height: 482px; width: 100%;"></div>
+								</div>
+							</div>
+						</div>
+						<div class="col-lg-6 ps-3 ps-lg-0">
+							<div class="oe-border">
+								<div class="d-flex flex-column gap-2">
+									<span class="dashboard-card-title fw-bold fs-2">
+										Number of Quotes by Salesperson
+									</span>
+									<div id="number-of-quotes-by-salesperson" style="height: 482px; width: 100%;"></div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</t>
+</templates>

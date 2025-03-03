@@ -12,6 +12,10 @@ $colors: (
     overflow-y: auto;
 }
 
+.separator {
+    border-top: 1px solid map-get($colors, navbar-border);
+}
+
 .navbar-custom {
     position: sticky;
     top: 0;
@@ -140,6 +144,17 @@ $colors: (
 
 .text-dashboard-primary {
     color: map-get($colors, text-primary);
+}
+
+.button-primary, .button-primary:hover {
+    background-color: map-get($colors, primary);
+    color: #ffffff;
+}
+
+.button-outline-primary, .button-outline-primary:hover {
+    background-color: #ffffff;
+    color: map-get($colors, primary);
+    border: 1px solid map-get($colors, primary);
 }
 
 @media (min-width: 992px) {

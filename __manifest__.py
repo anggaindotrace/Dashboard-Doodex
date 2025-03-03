@@ -19,7 +19,8 @@
 
     # always loaded
     'data': [
-        # 'security/ir.model.access.csv',
+        'security/ir.model.access.csv',
+        'views/sales_performance_dashboard_views.xml',
         'views/dashboard_homepage_views.xml',
         'views/menu_items.xml'
     ],

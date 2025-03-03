@@ -16,8 +16,7 @@ export class DashboardController{
                 period_type: 'month',
                 period: 0
             },
-            category:  initialOptions.category || 'all',
-            entity: initialOptions.entity || 'all',
+
         };
         this.initDateFilters(this.options.date.filter);
     }
