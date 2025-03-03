@@ -7,7 +7,7 @@ export class KPI extends Component {
     static props = {
         name: { type: String, optional: false },
         value: { type: String, optional: false },
-        percentage: { type: Number, optional: false },
+        percentage: { type: Number, optional: true },
     };
     setup() {}
 }
