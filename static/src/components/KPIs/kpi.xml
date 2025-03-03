@@ -9,7 +9,7 @@
 				<div class="oe-kpi-value">
 					<t t-out="props.value" />
 				</div>
-				<t t-if="props.percentage">
+				<t t-if="props.percentage != null">
 					<div class="d-flex gap-2 flex-row align-items-center justify-content-start fw-semibold">
 						<t t-if="props.percentage > 0">
 							<svg width="32" height="16" viewBox="0 0 24 12" fill="none" xmlns="http://www.w3.org/2000/svg">

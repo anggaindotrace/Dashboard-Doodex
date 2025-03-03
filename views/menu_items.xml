@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <odoo>
-    <menuitem id="menu_dashboard" name="Dashboard" sequence="10" web_icon="Dashboard-Doodex/static/description/icon.png"/>
+    <menuitem id="menu_dashboard" name="Dashboard" sequence="10" web_icon="Dashboard-Doodex,static/description/icon.png"/>
     <menuitem id="menu_dashboard_homepage" name="Homepage" action="action_dashboard_homepage" sequence="10" parent="menu_dashboard"/>
     <menuitem id="menu_sales_performance_dashboard" name="Sales Performance Dashboard" action="action_sales_dashboard_homepage" sequence="20" parent="menu_dashboard"/>
 </odoo>

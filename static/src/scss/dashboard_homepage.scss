@@ -146,15 +146,22 @@ $colors: (
     color: map-get($colors, text-primary);
 }
 
-.button-primary, .button-primary:hover {
+.button-secondary, .button-secondary:hover {
     background-color: map-get($colors, primary);
     color: #ffffff;
 }
 
-.button-outline-primary, .button-outline-primary:hover {
+.button-outline-secondary, .button-outline-primary:hover {
     background-color: #ffffff;
     color: map-get($colors, primary);
-    border: 1px solid map-get($colors, primary);
+    border: 2px solid map-get($colors, primary);
+}
+
+.btn-secondary, .btn-secondary:hover, .btn-secondary:focus {
+    background-color: #ffffff;
+    color: map-get($colors, text-primary);
+    border: 2px solid map-get($colors, border);
+    border-radius: 8px;
 }
 
 @media (min-width: 992px) {
@@ -187,6 +194,12 @@ $colors: (
 
     .row > *:last-child {
         padding-left: 0.5rem;
+    }
+
+    .btn-secondary, .btn-secondary:hover {
+        background-color: #ffffff;
+        color: map-get($colors, text-primary);
+        border: 4px solid map-get($colors, border);
     }
 
 }
