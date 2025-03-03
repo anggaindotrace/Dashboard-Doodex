@@ -192,7 +192,7 @@
 									<span class="dashboard-card-title fw-bold fs-2">
 										Revenue by Salesperson
 									</span>
-									<div id="revenue-by-customer" style="height: 482px; width: 100%;"></div>
+									<div id="revenue-by-salesperson" style="height: 482px; width: 100%;"></div>
 								</div>
 							</div>
 						</div>

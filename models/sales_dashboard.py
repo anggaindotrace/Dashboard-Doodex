@@ -27,13 +27,16 @@ class SalesDashboard(models.Model):
                 am.state as invoice_state,
                 aml.price_subtotal as invoice_amount,
                 am.amount_residual as invoice_amount_residual,
-                am.id as invoice_id
+                am.id as invoice_id,
+                rpu.name as salesperson
             FROM sale_order_line sol
             INNER JOIN product_product pp ON sol.product_id = pp.id
             INNER JOIN product_template pt ON pp.product_tmpl_id = pt.id
             INNER JOIN product_category pc ON pt.categ_id = pc.id
             INNER JOIN sale_order so ON sol.order_id = so.id
             INNER JOIN res_partner rp ON so.partner_id = rp.id
+            INNER JOIN res_users ru ON so.user_id = ru.id
+			LEFT JOIN res_partner rpu ON rpu.id = ru.partner_id
             LEFT JOIN sale_order_line_invoice_rel solir ON sol.id = solir.order_line_id
             LEFT JOIN account_move_line aml ON solir.invoice_line_id= aml.id
             LEFT JOIN account_move am ON aml.move_id = am.id

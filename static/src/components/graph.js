@@ -1569,7 +1569,7 @@ export class Graph{
       series.appear(1000, 100);
     }
 
-    async renderBarChart(referenceId){
+    async renderBarChart(data, referenceId){
       const root = await this.initChart(referenceId);
       var chart = root.container.children.push(am5xy.XYChart.new(root, {
         panX: true,
@@ -1606,7 +1606,7 @@ export class Graph{
       
       var xAxis = chart.xAxes.push(am5xy.CategoryAxis.new(root, {
         maxDeviation: 0.3,
-        categoryField: "country",
+        categoryField: "salesperson",
         renderer: xRenderer,
         tooltip: am5.Tooltip.new(root, {})
       }));
@@ -1628,7 +1628,7 @@ export class Graph{
         yAxis: yAxis,
         valueYField: "value",
         sequencedInterpolation: true,
-        categoryXField: "country",
+        categoryXField: "salesperson",
         tooltip: am5.Tooltip.new(root, {
           labelText: "{valueY}"
         }),
@@ -1637,40 +1637,40 @@ export class Graph{
       }));
       
       // Set data
-      var data = [{
-        country: "USA",
-        value: 2025
-      }, {
-        country: "China",
-        value: 1882
-      }, {
-        country: "Japan",
-        value: 1809
-      }, {
-        country: "Germany",
-        value: 1322
-      }, {
-        country: "UK",
-        value: 1122
-      }, {
-        country: "France",
-        value: 1114
-      }, {
-        country: "India",
-        value: 984
-      }, {
-        country: "Spain",
-        value: 711
-      }, {
-        country: "Netherlands",
-        value: 665
-      }, {
-        country: "South Korea",
-        value: 443
-      }, {
-        country: "Canada",
-        value: 441
-      }];
+      // var data = [{
+      //   salesperson: "USA",
+      //   value: 2025
+      // }, {
+      //   salesperson: "China",
+      //   value: 1882
+      // }, {
+      //   salesperson: "Japan",
+      //   value: 1809
+      // }, {
+      //   salesperson: "Germany",
+      //   value: 1322
+      // }, {
+      //   salesperson: "UK",
+      //   value: 1122
+      // }, {
+      //   salesperson: "France",
+      //   value: 1114
+      // }, {
+      //   salesperson: "India",
+      //   value: 984
+      // }, {
+      //   salesperson: "Spain",
+      //   value: 711
+      // }, {
+      //   salesperson: "Netherlands",
+      //   value: 665
+      // }, {
+      //   salesperson: "South Korea",
+      //   value: 443
+      // }, {
+      //   salesperson: "Canada",
+      //   value: 441
+      // }];
       
       xAxis.data.setAll(data);
       series.data.setAll(data);
