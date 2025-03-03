@@ -378,12 +378,12 @@ export class Graph{
               valueField: "percent",
               categoryField: "type",
               fillField: "color",
-              alignLabels: false
+              alignLabels: true
             })
           );
           
           series.slices.template.set("templateField", "sliceSettings");
-          series.labels.template.set("radius", 20);
+          series.labels.template.set("radius", 5);
 
           //hide while mobile
           function visibilityTicks(){
