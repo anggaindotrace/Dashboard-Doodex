@@ -550,7 +550,9 @@ class UniversalDashboard(models.Model):
                 'product_type': dict(purchase.product_id.product_tmpl_id._fields['type'].selection).get(purchase.product_id.product_tmpl_id.type),
                 'purchase_order_id': purchase.order_id.id,
                 'currency_id': purchase.currency_id.name,
-                'currency_symbol': purchase.currency_id.symbol
+                'currency_symbol': purchase.currency_id.symbol,
+                'product_category_id': purchase.product_id.categ_id.id,
+                'product_category_name': purchase.product_id.categ_id.name
              })
             
         return result
@@ -577,7 +579,9 @@ class UniversalDashboard(models.Model):
                 'product_type': dict(sale.product_id.product_tmpl_id._fields['type'].selection).get(sale.product_id.product_tmpl_id.type),
                 'sale_order_id': sale.order_id.id,
                 'currency_id': sale.currency_id.name,
-                'currency_symbol': sale.currency_id.symbol
+                'currency_symbol': sale.currency_id.symbol,
+                'product_category_id': sale.product_id.categ_id.id,
+                'product_category_name': sale.product_id.categ_id.name
             })
 
         return result

@@ -319,11 +319,11 @@ export class Graph{
         
         // Group data by product type
         var groupedData = resultData.reduce((acc, item) => {
-            let productType = item.product_type;
-            if (!acc[productType]) {
-                acc[productType] = {
+            let product_category_name = item.product_category_name;
+            if (!acc[product_category_name]) {
+                acc[product_category_name] = {
                     parent_type: item.type,
-                    type: productType,
+                    type: product_category_name,
                     percent: 0,
                     color: null,
                     products: [],
@@ -331,9 +331,9 @@ export class Graph{
                 };
             }
 
-            let productIndex = acc[productType].products.findIndex(product => product.id === item.product_id);
+            let productIndex = acc[product_category_name].products.findIndex(product => product.id === item.product_id);
             if (productIndex === -1) {
-                acc[productType].products.push({
+                acc[product_category_name].products.push({
                     parent_type: item.type,
                     id: item.product_id,
                     name: item.product_name,
@@ -341,7 +341,7 @@ export class Graph{
                     currency_symbol: item.currency_symbol
                 });
             } else {
-                acc[productType].products[productIndex].totalAmount += item.amount;
+                acc[product_category_name].products[productIndex].totalAmount += item.amount;
             }
             return acc;
         }, {});
