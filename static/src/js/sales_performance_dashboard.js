@@ -37,7 +37,8 @@ export class SalesPerformanceDashboard extends Component {
             productCategoryList: {},
             productCategoryId: null,
             productCategoryNameHeader: "-",
-            averageSaleOrderLine: []
+            averageSaleOrderLine: [],
+            averagetype: 'weekly'
         });
         onMounted(async () => {
             await this.getSalesPerformanceData();
@@ -49,7 +50,7 @@ export class SalesPerformanceDashboard extends Component {
             await this.graph.renderHierarchyChart('#distribution-analysis');
             await this.graph.renderBarChart('#revenue-by-customer');
             await this.graph.renderBarChart('#number-of-quotes-by-salesperson');
-            this.state.averageSaleOrderLine = await this.getAverageSaleOrderByTimeGroup(this.state.salesPerformanceData, 'weekly');
+            this.state.averageSaleOrderLine = await this.getAverageSaleOrderByTimeGroup(this.state.salesPerformanceData, this.state.averagetype);
             await this.graph.renderAverageSaleOrderLine(this.state.averageSaleOrderLine);
         });
     }
@@ -118,6 +119,8 @@ export class SalesPerformanceDashboard extends Component {
         }
         await this.getSalesPerformanceData();
         await this.graph.renderTopSellingProducts(this.state.top3ProductsBySales, this.state.isValueActive ? 'value' : 'quantity');
+        this.state.averageSaleOrderLine = await this.getAverageSaleOrderByTimeGroup(this.state.salesPerformanceData, this.state.averagetype);
+        await this.graph.renderAverageSaleOrderLine(this.state.averageSaleOrderLine);
     }
 
 
@@ -131,6 +134,8 @@ export class SalesPerformanceDashboard extends Component {
         }
         await this.getSalesPerformanceData();
         await this.graph.renderTopSellingProducts(this.state.top3ProductsBySales, this.state.isValueActive ? 'value' : 'quantity');
+        this.state.averageSaleOrderLine = await this.getAverageSaleOrderByTimeGroup(this.state.salesPerformanceData, this.state.averagetype);
+        await this.graph.renderAverageSaleOrderLine(this.state.averageSaleOrderLine);
     }
 
     async onProductCategorySelect(productCategoryId) {
@@ -143,6 +148,8 @@ export class SalesPerformanceDashboard extends Component {
         }
         await this.getSalesPerformanceData();
         await this.graph.renderTopSellingProducts(this.state.top3ProductsBySales, this.state.isValueActive ? 'value' : 'quantity');
+        this.state.averageSaleOrderLine = await this.getAverageSaleOrderByTimeGroup(this.state.salesPerformanceData, this.state.averagetype);
+        await this.graph.renderAverageSaleOrderLine(this.state.averageSaleOrderLine);
     }
 
     filterByValue() {

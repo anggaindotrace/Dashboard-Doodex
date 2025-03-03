@@ -47,8 +47,10 @@ class SalesDashboard(models.Model):
             query += " AND rp.id = %s"
             params.append(int(customer_id))
         if product_category_id:
-            query += " AND pc.id = %s"
-            params.append(int(product_category_id))
+            # If a product category is specified, include all its child categories in the search
+            child_category_ids = self.env['product.category'].search([('id', 'child_of', int(product_category_id))]).ids + [int(product_category_id)]
+            query += " AND pc.id IN %s"
+            params.append(tuple(child_category_ids))
         
         # Debugging: Log the query and parameters to check for issues
         _logger.debug("Executing query: %s with params: %s", query, params)
