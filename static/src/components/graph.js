@@ -1784,18 +1784,7 @@ export class Graph{
     }
 
     async renderAverageSaleOrderLine(data) {
-      // Sample data for demonstration purposes
-      const sampleData = [
-          { date: new Date(2023, 0, 1).getTime(), averageSaleOrder: 1500 },
-          { date: new Date(2023, 0, 2).getTime(), averageSaleOrder: 1600 },
-          { date: new Date(2023, 0, 3).getTime(), averageSaleOrder: 1700 },
-          { date: new Date(2023, 0, 4).getTime(), averageSaleOrder: 1800 },
-          { date: new Date(2023, 0, 5).getTime(), averageSaleOrder: 1900 },
-      ];
-
-      // Use sample data if no data is provided
-      const chartData = sampleData;
-      console.log("chartData", chartData);
+      const chartData = data;
       const root = await this.initChart("#average-sales-line-chart");
 
       var chart = root.container.children.push(
@@ -1853,6 +1842,17 @@ export class Graph{
           strokeWidth: 4,
       });
       series.data.setAll(chartData);
+
+      // Add dots to the line series
+      series.bullets.push(function() {
+          return am5.Bullet.new(root, {
+              sprite: am5.Circle.new(root, {
+                  radius: 5,
+                  fill: series.get("fill")
+              })
+          });
+      });
+
       chart.appear(1000, 100);
-    }
+  }
 }
