@@ -552,7 +552,7 @@ class UniversalDashboard(models.Model):
                 'currency_id': purchase.currency_id.name,
                 'currency_symbol': purchase.currency_id.symbol,
                 'product_category_id': purchase.product_id.categ_id.id,
-                'product_category_name': purchase.product_id.categ_id.name
+                'product_category_name': purchase.product_id.categ_id.display_name
              })
             
         return result

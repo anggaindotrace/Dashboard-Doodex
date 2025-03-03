@@ -384,7 +384,7 @@ export class Graph{
           );
           
           series.slices.template.set("templateField", "sliceSettings");
-          series.labels.template.set("radius", 5);
+          series.labels.template.set("radius", 2);
 
           //hide while mobile
           function visibilityTicks(){
