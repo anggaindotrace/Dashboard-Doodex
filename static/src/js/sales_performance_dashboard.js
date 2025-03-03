@@ -59,30 +59,30 @@ export class SalesPerformanceDashboard extends Component {
         const today = new Date();
         var averagetype = 'weekly';
         if (dateFilter === "This Month") {
-            this.state.dateFrom = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
-            this.state.dateTo = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split('T')[0];
+            this.state.dateFrom = new Date(Date.UTC(today.getFullYear(), today.getMonth(), 1)).toISOString().split('T')[0];
+            this.state.dateTo = new Date(Date.UTC(today.getFullYear(), today.getMonth() + 1, 0)).toISOString().split('T')[0];
             averagetype = 'weekly';
         } else if (dateFilter === "This Quarter") {
             const currentQuarter = Math.floor(today.getMonth() / 3);
-            this.state.dateFrom = new Date(today.getFullYear(), currentQuarter * 3, 1).toISOString().split('T')[0];
-            this.state.dateTo = new Date(today.getFullYear(), (currentQuarter + 1) * 3, 0).toISOString().split('T')[0];
+            this.state.dateFrom = new Date(Date.UTC(today.getFullYear(), currentQuarter * 3, 1)).toISOString().split('T')[0];
+            this.state.dateTo = new Date(Date.UTC(today.getFullYear(), (currentQuarter + 1) * 3, 0)).toISOString().split('T')[0];
             averagetype = 'monthly';
         } else if (dateFilter === "This Financial Year") {
-            this.state.dateFrom = new Date(today.getFullYear(), 0, 1).toISOString().split('T')[0];
-            this.state.dateTo = new Date(today.getFullYear(), 11, 32).toISOString().split('T')[0];
+            this.state.dateFrom = new Date(Date.UTC(today.getFullYear(), 0, 1)).toISOString().split('T')[0];
+            this.state.dateTo = new Date(Date.UTC(today.getFullYear(), 11, 31)).toISOString().split('T')[0];
             averagetype = 'quarterly';
         } else if (dateFilter === "Last Month") {
-            this.state.dateFrom = new Date(today.getFullYear(), today.getMonth() - 1, 1).toISOString().split('T')[0];
-            this.state.dateTo = new Date(today.getFullYear(), today.getMonth(), 0).toISOString().split('T')[0];
+            this.state.dateFrom = new Date(Date.UTC(today.getFullYear(), today.getMonth() - 1, 1)).toISOString().split('T')[0];
+            this.state.dateTo = new Date(Date.UTC(today.getFullYear(), today.getMonth(), 0)).toISOString().split('T')[0];
             averagetype = 'weekly';
         } else if (dateFilter === "Last Quarter") {
             const lastQuarter = Math.floor((today.getMonth() - 3) / 3);
-            this.state.dateFrom = new Date(today.getFullYear(), lastQuarter * 3, 1).toISOString().split('T')[0];
-            this.state.dateTo = new Date(today.getFullYear(), (lastQuarter + 1) * 3, 0).toISOString().split('T')[0];
+            this.state.dateFrom = new Date(Date.UTC(today.getFullYear(), lastQuarter * 3, 1)).toISOString().split('T')[0];
+            this.state.dateTo = new Date(Date.UTC(today.getFullYear(), (lastQuarter + 1) * 3, 0)).toISOString().split('T')[0];
             averagetype = 'monthly';
         } else if (dateFilter === "Last Financial Year") {
-            this.state.dateFrom = new Date(today.getFullYear() - 1, 0, 1).toISOString().split('T')[0];
-            this.state.dateTo = new Date(today.getFullYear() - 1, 11, 32).toISOString().split('T')[0];
+            this.state.dateFrom = new Date(Date.UTC(today.getFullYear() - 1, 0, 1)).toISOString().split('T')[0];
+            this.state.dateTo = new Date(Date.UTC(today.getFullYear() - 1, 11, 31)).toISOString().split('T')[0];
             averagetype = 'quarterly';
         } else if (dateFilter === "Custom") {
             const dateFromInput = document.getElementById('dateFrom').value;
@@ -96,6 +96,8 @@ export class SalesPerformanceDashboard extends Component {
             this.state.dateFilterHeader = `${formatDate(dateFromInput)} - ${formatDate(dateToInput)}`;
             averagetype = 'weekly';
         }
+        console.log("datefrom", this.state.dateFrom);
+        console.log("dateTo", this.state.dateTo);
         await this.getSalesPerformanceData();
         await this.graph.renderTopSellingProducts(this.state.top3ProductsBySales, this.state.isValueActive ? 'value' : 'quantity');
         await this.graph.renderComboCharts('#sales-temporal-analysis');

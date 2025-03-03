@@ -171,7 +171,7 @@ export class Graph{
     }
 
     async renderComboCharts(data) {
-        const root = await this.initChart("#distribution");
+        const root = await this.initChart("#distribution-analysis");
 
         var chart = root.container.children.push(
             am5xy.XYChart.new(root, {
