@@ -48,7 +48,7 @@ export class SalesPerformanceDashboard extends Component {
             await this.getProductCategoryDatas();
             await this.graph.renderTopSellingProducts(this.state.top3ProductsBySales, 'value');
             this.state.customerList = this.getCustomerList(this.state.salesPerformanceData);
-            await this.graph.renderCombinationChart('#sales-temporal-analysis');
+            await this.graph.renderCombinationChart(this.state.saleTemporalAnalysis,'#sales-temporal-analysis', this.state.dateFilterHeader);
             await this.graph.renderHierarchyChart(this.state.categoryProductHierarchy,'#distribution-analysis');
 
             await this.graph.renderBarChart(this.state.totalAmountBySalesperson, '#revenue-by-salesperson');
@@ -102,12 +102,13 @@ export class SalesPerformanceDashboard extends Component {
         }
         await this.getSalesPerformanceData();
         await this.graph.renderTopSellingProducts(this.state.top3ProductsBySales, this.state.isValueActive ? 'value' : 'quantity');
-        await this.graph.renderCombinationChart('#sales-temporal-analysis');
+        await this.graph.renderCombinationChart(this.state.saleTemporalAnalysis,'#sales-temporal-analysis', this.state.dateFilterHeader);
         await this.graph.renderHierarchyChart(this.state.categoryProductHierarchy, '#distribution-analysis');
         await this.graph.renderBarChart(this.state.totalAmountBySalesperson, '#revenue-by-salesperson');
         await this.graph.renderBarChart(this.state.totalSaleOrderIdBySalesperson, '#number-of-quotes-by-salesperson');
         this.state.averageSaleOrderLine = await this.getAverageSaleOrderByTimeGroup(this.state.salesPerformanceData, averagetype);
         await this.graph.renderAverageSaleOrderLine(this.state.averageSaleOrderLine);
+        console.log(this.state.saleTemporalAnalysis);
     }
 
     async onCustomerSelect(customerId) {
@@ -121,6 +122,7 @@ export class SalesPerformanceDashboard extends Component {
         await this.getSalesPerformanceData();
         await this.graph.renderTopSellingProducts(this.state.top3ProductsBySales, this.state.isValueActive ? 'value' : 'quantity');
         await this.graph.renderBarChart(this.state.totalAmountBySalesperson, '#revenue-by-salesperson');
+        await this.graph.renderCombinationChart(this.state.saleTemporalAnalysis,'#sales-temporal-analysis', this.state.dateFilterHeader);
         await this.graph.renderBarChart(this.state.totalSaleOrderIdBySalesperson, '#number-of-quotes-by-salesperson');
         await this.graph.renderHierarchyChart(this.state.categoryProductHierarchy, '#distribution-analysis');
         this.state.averageSaleOrderLine = await this.getAverageSaleOrderByTimeGroup(this.state.salesPerformanceData, this.state.averagetype);
@@ -143,6 +145,7 @@ export class SalesPerformanceDashboard extends Component {
         await this.graph.renderHierarchyChart(this.state.categoryProductHierarchy, '#distribution-analysis');
         this.state.averageSaleOrderLine = await this.getAverageSaleOrderByTimeGroup(this.state.salesPerformanceData, this.state.averagetype);
         await this.graph.renderAverageSaleOrderLine(this.state.averageSaleOrderLine);
+        await this.graph.renderCombinationChart(this.state.saleTemporalAnalysis,'#sales-temporal-analysis', this.state.dateFilterHeader);
     }
 
     async onProductCategorySelect(productCategoryId) {
@@ -160,6 +163,7 @@ export class SalesPerformanceDashboard extends Component {
         await this.graph.renderHierarchyChart(this.state.categoryProductHierarchy, '#distribution-analysis');
         this.state.averageSaleOrderLine = await this.getAverageSaleOrderByTimeGroup(this.state.salesPerformanceData, this.state.averagetype);
         await this.graph.renderAverageSaleOrderLine(this.state.averageSaleOrderLine);
+        await this.graph.renderCombinationChart(this.state.saleTemporalAnalysis,'#sales-temporal-analysis', this.state.dateFilterHeader);
     }
 
     filterByValue() {
@@ -417,6 +421,104 @@ export class SalesPerformanceDashboard extends Component {
         return customers;
     }
 
+    getSaleTemporalAnalysis(salesPerformanceData) {
+        if (!salesPerformanceData || salesPerformanceData.length === 0) {
+            return [];
+        }
+        const saleTemporalAnalysis = salesPerformanceData.reduce((saleTemporalAnalysisMap, sale) => {
+            if(sale.sale_order_id && sale.state === 'sale') {
+               if(!saleTemporalAnalysisMap[sale.sale_order_id]) {
+                saleTemporalAnalysisMap[sale.sale_order_id] = {
+                    amount_untaxed: 0,
+                    amount_to_invoice: 0,
+                    waiting_for_payment: 0,
+                    amount_received: 0,
+                    invoice_amount_residual: 0,
+                    date_order: sale.date,
+                    invoice_date_due: sale.invoice_date_due
+                    }
+                }
+                if(saleTemporalAnalysisMap[sale.sale_order_id].amount_untaxed == 0) {
+                    saleTemporalAnalysisMap[sale.sale_order_id].amount_untaxed = sale.amount_untaxed;
+                }
+                saleTemporalAnalysisMap[sale.sale_order_id].amount_to_invoice += sale.amount_to_invoice;
+                saleTemporalAnalysisMap[sale.sale_order_id].waiting_for_payment += sale.waiting_for_payment;
+                saleTemporalAnalysisMap[sale.sale_order_id].amount_received += sale.amount_received;
+                saleTemporalAnalysisMap[sale.sale_order_id].invoice_amount_residual += sale.invoice_amount_residual;
+            }
+            return saleTemporalAnalysisMap;
+        }, {});
+        
+        // Then, aggregate by date
+        const saleTemporalAnalysisByDate = Object.values(saleTemporalAnalysis).reduce((dateMap, sale) => {
+            const dateKey = sale.date_order;
+            if (!dateMap[dateKey]) {
+                dateMap[dateKey] = {
+                    date: dateKey,
+                    amount_untaxed: 0,
+                    amount_to_invoice: 0,
+                    waiting_for_payment: 0,
+                    amount_received: 0,
+                    invoice_amount_residual: 0,
+                    overdue: 0
+                };
+            }
+            
+            dateMap[dateKey].amount_untaxed += sale.amount_untaxed;
+            dateMap[dateKey].amount_to_invoice += sale.amount_to_invoice;
+            dateMap[dateKey].waiting_for_payment += sale.waiting_for_payment;
+            dateMap[dateKey].amount_received += sale.amount_received;
+            dateMap[dateKey].invoice_amount_residual += sale.invoice_amount_residual;
+            
+            // Check if invoice is overdue
+            if (sale.invoice_date_due) {
+                const today = new Date();
+                const dueDate = new Date(sale.invoice_date_due);
+                if (dueDate < today) {
+                    dateMap[dateKey].overdue += sale.invoice_amount_residual;
+                }
+            }
+            return dateMap;
+        }, {});
+        const sortedSaleTemporalAnalysisByDate = Object.values(saleTemporalAnalysisByDate).sort((a, b) => new Date(a.date) - new Date(b.date));
+        return sortedSaleTemporalAnalysisByDate;
+    }
+
+    getCategoryProductHierarchy(salesPerformanceData) {
+        if (!salesPerformanceData || salesPerformanceData.length === 0) {
+            return [];
+        }
+        const categoryList = salesPerformanceData.reduce((categoryMap, sale) => {
+            if (sale.product_category && sale.state === 'sale') {
+                if (!categoryMap[sale.product_category]) {
+                    categoryMap[sale.product_category] = {
+                       "name": sale.product_category,
+                       "children": []
+                    };
+                }
+                if(!categoryMap[sale.product_category].children.find(child => child.name === Object.values(sale.product_name)[0])) {
+                    categoryMap[sale.product_category].children.push({
+                        "name": Object.values(sale.product_name)[0],
+                        "quantity": 0,
+                    });
+                }
+                categoryMap[sale.product_category].children.findIndex((child) =>{
+                    if(child.name === Object.values(sale.product_name)[0]) {
+                        child.quantity += sale.quantity;
+                    }
+                })
+            }
+            return categoryMap;
+        }, {});
+        const formattedCategoryList = Object.values(categoryList).map(category => {
+            return{
+                name: category.name,
+                children: category.children
+            };
+        });
+        return formattedCategoryList;
+    }
+
     getTotalAmountBySalesperson(salesPerformanceData) {
         if (!salesPerformanceData || salesPerformanceData.length === 0) {
             return [];
@@ -467,41 +569,6 @@ export class SalesPerformanceDashboard extends Component {
         return formattedData;
     }
 
-    getCategoryProductHierarchy(salesPerformanceData) {
-        if (!salesPerformanceData || salesPerformanceData.length === 0) {
-            return [];
-        }
-        const categoryList = salesPerformanceData.reduce((categoryMap, sale) => {
-            if (sale.product_category && sale.state === 'sale') {
-                if (!categoryMap[sale.product_category]) {
-                    categoryMap[sale.product_category] = {
-                       "name": sale.product_category,
-                       "children": []
-                    };
-                }
-                if(!categoryMap[sale.product_category].children.find(child => child.name === Object.values(sale.product_name)[0])) {
-                    categoryMap[sale.product_category].children.push({
-                        "name": Object.values(sale.product_name)[0],
-                        "quantity": 0,
-                    });
-                }
-                categoryMap[sale.product_category].children.findIndex((child) =>{
-                    if(child.name === Object.values(sale.product_name)[0]) {
-                        child.quantity += sale.quantity;
-                    }
-                })
-            }
-            return categoryMap;
-        }, {});
-        const formattedCategoryList = Object.values(categoryList).map(category => {
-            return{
-                name: category.name,
-                children: category.children
-            };
-        });
-        return formattedCategoryList;
-    }
-
     async getSalesPerformanceData() {
         try {
             await rpc("/web/dataset/call_kw/sales.dashboard/get_sales_performance_data", {
@@ -521,6 +588,7 @@ export class SalesPerformanceDashboard extends Component {
                 this.state.totalAmountBySalesperson = this.getTotalAmountBySalesperson(res[0]);
                 this.state.totalSaleOrderIdBySalesperson = this.getTotalSaleOrderIdBySalesperson(res[0]);
                 this.state.categoryProductHierarchy = this.getCategoryProductHierarchy(res[0]);
+                this.state.saleTemporalAnalysis = this.getSaleTemporalAnalysis(res[0]);
             });
         } catch (error) {
             console.log(error);

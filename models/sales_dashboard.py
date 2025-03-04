@@ -17,8 +17,12 @@ class SalesDashboard(models.Model):
             SELECT 
                 so.date_order::date as date,
                 so.state,
+                so.amount_untaxed,
                 sol.price_subtotal as amount,
-                sol.product_uom_qty as quantity,                
+                sol.product_uom_qty as quantity,
+                sol.amount_to_invoice,
+                sol.waiting_for_payment,
+                sol.amount_received,                
                 pc.name as product_category,
                 pt.name as product_name,
                 rp.name as customer,
@@ -28,6 +32,7 @@ class SalesDashboard(models.Model):
                 aml.price_subtotal as invoice_amount,
                 am.amount_residual as invoice_amount_residual,
                 am.id as invoice_id,
+                am.invoice_date_due, 
                 rpu.name as salesperson
             FROM sale_order_line sol
             INNER JOIN product_product pp ON sol.product_id = pp.id

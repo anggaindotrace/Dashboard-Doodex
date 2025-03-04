@@ -467,12 +467,12 @@ class UniversalDashboard(models.Model):
                 EXTRACT({period_unit} FROM create_date) AS period,
                 SUM(value) AS total_stock_valuation
             FROM stock_valuation_layer
-            WHERE create_date BETWEEN %s AND %s
+            WHERE create_date <= %s
             AND company_id = %s
             GROUP BY period
             ORDER BY period
         '''
-        stock_valuation_data = self._execute_query(stock_valuation_breakdown, (date_from, date_to, company_id))
+        stock_valuation_data = self._execute_query(stock_valuation_breakdown, (date_to, company_id))
 
         crm_breakdown = f'''
             SELECT 
