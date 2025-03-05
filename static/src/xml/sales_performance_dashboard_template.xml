@@ -158,7 +158,7 @@
 														<t t-esc="state.selectedProductCategories[0].name"/>
 													</t>
 													<t t-if="state.selectedProductCategories.length > 1">
-														<t t-esc="state.selectedProducts.length"/> selected
+														<t t-esc="state.selectedProductCategories.length"/> selected
 													</t>
 												</span>
 											</div>
