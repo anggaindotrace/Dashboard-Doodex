@@ -170,6 +170,48 @@ $colors: (
     border: 2px solid map-get($colors, primary);
 }
 
+.multi-select-dropdown .dropdown-menu {
+    padding: 10px 0;
+}
+
+.multi-select-dropdown .dropdown-item:hover {
+    background-color: #f8f9fa;
+    cursor: pointer;
+}
+
+.multi-select-dropdown .dropdown-item.active {
+    background-color: #e9ecef;
+    color: #212529;
+}
+
+.badge .fa-times {
+    cursor: pointer;
+}
+
+.badge .fa-times:hover {
+    opacity: 0.8;
+}
+
+.text-theme-primary {
+    color: map-get($colors, dark);
+}
+
+.text-theme-primary:hover {
+    color: map-get($colors, primary);
+}
+
+.top-sales-by-product {
+    height: 252px; 
+    width: 100%;
+}
+
+@media (min-width: 768px) {
+    .top-sales-by-product {
+        height: 80%; 
+        width: 100%;
+    }
+}
+
 @media (min-width: 992px) {
     .oe-border {
         border: 4px solid map-get($colors, border);
@@ -210,6 +252,11 @@ $colors: (
 
     .button-secondary:focus, .button-secondary.focus {
         border: 4px solid map-get($colors, primary);
+    }
+
+    .top-sales-by-product {
+        height: 158px; 
+        width: 100%;
     }
 
 }

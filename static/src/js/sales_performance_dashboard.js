@@ -14,6 +14,9 @@ export class SalesPerformanceDashboard extends Component {
     
     setup() {
         this.root = useRef("root");
+        this.customerDropdownRef = useRef("customerDropdown");
+        this.productDropdownRef = useRef("productDropdown");
+        this.categoryDropdownRef = useRef("categoryDropdown");
         this.graph = new Graph(this.root);
         this.state = useState({
             totalSalesValidatedAmount: 0,
@@ -28,26 +31,40 @@ export class SalesPerformanceDashboard extends Component {
             dateFilterHeader: "This Month",
             isValueActive: true,
             isQtyActive: false,
-            customerList: {},
-            customerId: null,
+
+            isCustomerDropdownOpen: false,
+            isProductDropdownOpen: false,
+            isProductCategoryDropdownOpen: false,
+
+            customers: [],
+            customerIds: [],
+            filteredCustomers: [],
+            selectedCustomers: [],
+            customerSearchText: "",
             customerNameHeader: "All",
-            productList: {},
+
+            products: [],
+            productIds: [],
+            filteredProducts: [],
+            selectedProducts: [],
+            productSearchText: "",
             productNameHeader: "All",
-            productId: null,
-            productCategoryList: {},
-            productCategoryId: null,
+
+            productCategories: [],
+            productCategoryIds: [],
+            filteredProductCategories: [],
+            selectedProductCategories: [],
+            productCategorySearchText: "",
             productCategoryNameHeader: "-",
+
             averageSaleOrderLine: [],
             averagetype: 'weekly',
             totalAmountBySalesperson: [],
-            totalSaleOrderIdBySalesperson: []
+            totalSaleOrderIdBySalesperson: [],
         });
         onMounted(async () => {
-            await this.getSalesPerformanceData();
-            await this.getProductDatas();
-            await this.getProductCategoryDatas();
             await this.graph.renderTopSellingProducts(this.state.top3ProductsBySales, 'value');
-            this.state.customerList = this.getCustomerList(this.state.salesPerformanceData);
+            this.state.customers = this.getCustomerList(this.state.salesPerformanceData);
             await this.graph.renderCombinationChart(this.state.saleTemporalAnalysis,'#sales-temporal-analysis', this.state.dateFilterHeader);
             await this.graph.renderHierarchyChart(this.state.categoryProductHierarchy,'#distribution-analysis');
 
@@ -55,8 +72,163 @@ export class SalesPerformanceDashboard extends Component {
             await this.graph.renderBarChart(this.state.totalSaleOrderIdBySalesperson, '#number-of-quotes-by-salesperson');
             this.state.averageSaleOrderLine = await this.getAverageSaleOrderByTimeGroup(this.state.salesPerformanceData, this.state.averagetype);
             await this.graph.renderAverageSaleOrderLine(this.state.averageSaleOrderLine);
+            this.state.filteredCustomers = [...this.state.customers];
+            this.state.filteredProducts = [...this.state.products];
+            this.state.filteredProductCategories = this.state.productCategories.filter(category => category.name !== "All");
+        });
+        onWillStart(async () => {
+            await this.getSalesPerformanceData();
+            await this.getProductDatas();
+            await this.getProductCategoryDatas();
+        })
+    }
+
+    onGlobalClick(ev){
+        if (this.state.isCustomerDropdownOpen && 
+            this.customerDropdownRef.el && 
+            !this.customerDropdownRef.el.contains(ev.target)) {
+            this.state.isCustomerDropdownOpen = false;
+        }
+        if (this.state.isProductDropdownOpen && 
+            this.productDropdownRef.el && 
+            !this.productDropdownRef.el.contains(ev.target)) {
+            this.state.isProductDropdownOpen = false;
+        }
+        if (this.state.isProductCategoryDropdownOpen && 
+            this.categoryDropdownRef.el && 
+            !this.categoryDropdownRef.el.contains(ev.target)) {
+            this.state.isProductCategoryDropdownOpen = false;
+        }
+    }
+
+    /**
+     * 
+     * @param {*} dropdown type
+     * for open and close dropdown
+     */
+    toggleDropdown(type) {
+        const dropdowns = [
+            'customer',
+            'product',
+            'productCategory'
+        ];
+        
+        dropdowns.forEach(dropdown => {
+            const dropdownKey = `is${dropdown.charAt(0).toUpperCase() + dropdown.slice(1)}DropdownOpen`;
+            if(type === dropdown) {
+                this.state[dropdownKey] = !this.state[dropdownKey];
+            } else {
+                this.state[dropdownKey] = false;
+            }
         });
     }
+
+    handleSearch(searchType, ev) {
+        const searchText = ev.target.value.toLowerCase();
+        this.state[`${searchType}SearchText`] = searchText;
+        
+        const options = this.state[`${searchType}`];
+        this.state[`filtered${searchType.charAt(0).toUpperCase() + searchType.slice(1)}`] = 
+            options.filter(option => option.name.toLowerCase().includes(searchText));
+    }
+
+    toggleOption(optionType, option) {
+        const selectedArray = `selected${optionType.charAt(0).toUpperCase() + optionType.slice(1)}`;
+        const index = this.state[selectedArray].findIndex(item => item.id === option.id);
+        
+        if (index === -1) {
+            this.state[selectedArray].push(option);
+        } else {
+            this.state[selectedArray].splice(index, 1);
+        }
+        if (optionType === 'Customers') {
+            this.state.customerIds = this.state[selectedArray].map(item => item.id);
+            this.onCustomerSelect();
+        } else if(optionType === 'Products'){
+            this.state.productIds = this.state[selectedArray].map(item => item.id);
+            this.onProductSelect();
+        } else if(optionType === 'ProductCategories'){
+            this.state.productCategoryIds = this.state[selectedArray].map(item => item.id);
+            this.onProductCategorySelect();
+        }
+    }
+
+    isSelected(optionType, option) {
+        const selectedArray = `selected${optionType.charAt(0).toUpperCase() + optionType.slice(1)}`;
+        return this.state[selectedArray].some(item => item.id === option.id);
+    }
+
+    handleDropdownClick = (type) => {
+        this.toggleDropdown(type);
+    }
+
+    clearAllFilters(filterType) {
+        const selectedArray = `selected${filterType.charAt(0).toUpperCase() + filterType.slice(1)}`;
+        this.state[selectedArray] = [];
+        if (filterType === 'customers') {
+            this.state.customerIds = [];
+            this.onCustomerSelect();
+        } else if (filterType === 'products') {
+            this.state.productIds = [];
+            this.onProductSelect();
+        } else if(filterType === 'productCategories'){
+            this.state.productCategoryIds = [];
+            this.onProductCategorySelect();
+        }
+    }
+
+    selectAll(filterType) {
+        const optionsArray = filterType;
+        const filteredArray = `filtered${filterType.charAt(0).toUpperCase() + filterType.slice(1)}`;
+        const selectedArray = `selected${filterType.charAt(0).toUpperCase() + filterType.slice(1)}`;
+        const searchText = this.state[`${filterType}SearchText`];
+        
+        if (searchText) {
+            // If searching, only select filtered options that aren't already selected
+            const newSelections = this.state[filteredArray].filter(
+                option => !this.isSelected(filterType, option)
+            );
+            this.state[selectedArray] = [...this.state[selectedArray], ...newSelections];
+            if (filterType === 'customers') {
+                this.state.customerIds = this.state[selectedArray].map(item => item.id);
+            } else if (filterType === 'products') {
+                this.state.productIds = this.state[selectedArray].map(item => item.id);
+            } else if(filterType === 'productCategories'){
+                this.state.productCategoryIds = this.state[selectedArray].map(item => item.id);
+            }
+        } else {
+            // If not searching, select all options
+            this.state[selectedArray] = [...this.state[optionsArray]];
+            if (filterType === 'customers') {
+                this.state.customerIds = this.state[selectedArray].map(item => item.id);
+            } else if (filterType === 'products') {
+                this.state.productIds = this.state[selectedArray].map(item => item.id);
+            } else if(filterType === 'productCategories'){
+                this.state.productCategoryIds = this.state[selectedArray].map(item => item.id);
+            }
+        }
+        if (filterType === 'customers') {
+            this.onCustomerSelect();
+        } else if (filterType === 'products') {
+            this.onProductSelect();
+        } else if(filterType === 'productCategories'){
+            this.onProductCategorySelect();
+        }
+    }
+
+    areAllSelected(filterType) {
+        const filteredArray = `filtered${filterType.charAt(0).toUpperCase() + filterType.slice(1)}`;
+        
+        if (this.state[filteredArray].length === 0) return false;
+        
+        return this.state[filteredArray].every(option => 
+            this.isSelected(filterType, option)
+        );
+    }
+
+    onClickCustomerOption = () => { this.handleDropdownClick('customer') }
+    onClickProductOption = () => { this.handleDropdownClick('product') }
+    onClickProductCategoryOption = () => { this.handleDropdownClick('productCategory') }
 
     async onDateFilterSelect(dateFilter) {
         this.state.dateFilterHeader = dateFilter;
@@ -108,18 +280,11 @@ export class SalesPerformanceDashboard extends Component {
         await this.graph.renderBarChart(this.state.totalSaleOrderIdBySalesperson, '#number-of-quotes-by-salesperson');
         this.state.averageSaleOrderLine = await this.getAverageSaleOrderByTimeGroup(this.state.salesPerformanceData, averagetype);
         await this.graph.renderAverageSaleOrderLine(this.state.averageSaleOrderLine);
-        console.log(this.state.saleTemporalAnalysis);
     }
 
-    async onCustomerSelect(customerId) {
-        if (customerId === "All") {
-            this.state.customerId = null;
-            this.state.customerNameHeader = "All";
-        } else {
-            this.state.customerId = customerId;
-            this.state.customerNameHeader = this.state.customerList[customerId];
-        }
+    async onCustomerSelect() {
         await this.getSalesPerformanceData();
+        console.log(this.state.saleTemporalAnalysis)
         await this.graph.renderTopSellingProducts(this.state.top3ProductsBySales, this.state.isValueActive ? 'value' : 'quantity');
         await this.graph.renderBarChart(this.state.totalAmountBySalesperson, '#revenue-by-salesperson');
         await this.graph.renderCombinationChart(this.state.saleTemporalAnalysis,'#sales-temporal-analysis', this.state.dateFilterHeader);
@@ -130,14 +295,7 @@ export class SalesPerformanceDashboard extends Component {
     }
 
 
-    async onProductSelect(productId) {
-        if (productId === "All") {
-            this.state.productId = null;
-            this.state.productNameHeader = "All";
-        } else {
-            this.state.productId = productId;
-            this.state.productNameHeader = this.state.productList[productId];
-        }
+    async onProductSelect() {
         await this.getSalesPerformanceData();
         await this.graph.renderTopSellingProducts(this.state.top3ProductsBySales, this.state.isValueActive ? 'value' : 'quantity');
         await this.graph.renderBarChart(this.state.totalAmountBySalesperson, '#revenue-by-salesperson');
@@ -148,14 +306,7 @@ export class SalesPerformanceDashboard extends Component {
         await this.graph.renderCombinationChart(this.state.saleTemporalAnalysis,'#sales-temporal-analysis', this.state.dateFilterHeader);
     }
 
-    async onProductCategorySelect(productCategoryId) {
-        if (productCategoryId === "-") {
-            this.state.productCategoryId = null;
-            this.state.productCategoryNameHeader = "-";
-        } else {
-            this.state.productCategoryId = productCategoryId;
-            this.state.productCategoryNameHeader = this.state.productCategoryList[productCategoryId];
-        }
+    async onProductCategorySelect() {
         await this.getSalesPerformanceData();
         await this.graph.renderTopSellingProducts(this.state.top3ProductsBySales, this.state.isValueActive ? 'value' : 'quantity');
         await this.graph.renderBarChart(this.state.totalAmountBySalesperson, '#revenue-by-salesperson');
@@ -169,13 +320,13 @@ export class SalesPerformanceDashboard extends Component {
     filterByValue() {
         this.state.isValueActive = true;
         this.state.isQtyActive = false;
-        this.graph.renderTopSellingProducts(this.state.top3ProductsBySales, 'value');
+        // this.graph.renderTopSellingProducts(this.state.top3ProductsBySales, 'value');
     }
 
     filterByQty() {
         this.state.isValueActive = false;
         this.state.isQtyActive = true;
-        this.graph.renderTopSellingProducts(this.state.top3ProductsBySales, 'quantity');
+        // this.graph.renderTopSellingProducts(this.state.top3ProductsBySales, 'quantity');
     }
 
     getTotalSalesValidatedAmount(salesPerformanceData) {
@@ -417,8 +568,11 @@ export class SalesPerformanceDashboard extends Component {
             }
             return customerMap;
         }, {});
-
-        return customers;
+        const formatedCustomerList = Object.keys(customers).map(customerId => ({
+            id: customerId,
+            name: customers[customerId]
+        }));
+        return formatedCustomerList;
     }
 
     getSaleTemporalAnalysis(salesPerformanceData) {
@@ -574,7 +728,7 @@ export class SalesPerformanceDashboard extends Component {
             await rpc("/web/dataset/call_kw/sales.dashboard/get_sales_performance_data", {
                 model: "sales.dashboard",
                 method: "get_sales_performance_data",
-                args: [[], this.state.dateFrom, this.state.dateTo, this.state.customerId, this.state.productId, this.state.productCategoryId],
+                args: [[], this.state.dateFrom, this.state.dateTo, this.state.customerIds, this.state.productIds, this.state.productCategoryIds],
                 kwargs: {}
             }).then(res => {
                 this.state.currency = res[1];
@@ -602,10 +756,15 @@ export class SalesPerformanceDashboard extends Component {
                 args: [[]],
                 kwargs: {}
             }).then(res => {
-                this.state.productList = res.reduce((productMap, product) => {
+                const products = res.reduce((productMap, product) => {
                     productMap[product.product_id] = product.product_name['en_US'] || Object.values(product.product_name)[0];;
                     return productMap;
                 }, {});
+                const formatedProductsList = Object.keys(products).map(productId => ({
+                    id: productId,
+                    name: products[productId]
+                }));
+                this.state.products = formatedProductsList
             });
         } catch (error) {
             console.log(error);
@@ -620,10 +779,15 @@ export class SalesPerformanceDashboard extends Component {
                 args: [[]],
                 kwargs: {}
             }).then(res => {
-                this.state.productCategoryList = res.reduce((categoryMap, category) => {
+                const productCategories= res.reduce((categoryMap, category) => {
                     categoryMap[category.product_category_id] = category.product_category_name;
                     return categoryMap;
                 }, {});
+                const formatedProductCategoryList = Object.keys(productCategories).map(productCategoryId => ({
+                    id: productCategoryId,
+                    name: productCategories[productCategoryId]
+                }));
+                this.state.productCategories = formatedProductCategoryList
             });
         } catch (error) {
             console.log(error);

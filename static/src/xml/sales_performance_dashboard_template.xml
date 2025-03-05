@@ -3,7 +3,7 @@
 	<t t-name="SalesPerformanceDashboard">
 		<div class="separator">
 		</div>
-		<div class="next-dashboard">
+		<div class="next-dashboard" t-on-click="onGlobalClick">
 			<div class="py-3" t-ref="root">
 				<div class="mx-3">
 					<div class="row mb-2">
@@ -13,12 +13,14 @@
 									Sales Performance Dashboard
 								</span>
 							</div>
-							<div class="d-flex gap-2 mt-2">
-								<div class="flex-grow-1">
+						</div>
+					</div>
+					<div class="row mb-4">
+								<div class="col-md-6 col-lg-3 mb-2 mb-lg-0">
 									<div class="dropdown">
-										<button class="btn button-secondary btn-lg" type="button" id="dateDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="width: 100%; height: auto;">
+										<div class="btn button-secondary btn-lg" type="button" id="dateDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="width: 100%; height: auto;">
 											Period : <span t-esc="state.dateFilterHeader"/>
-										</button>
+										</div>
 										<ul class="dropdown-menu" aria-labelledby="dateDropdown" style="width: 100%;">
 											<li><a class="dropdown-item" href="#" t-on-click="() => this.onDateFilterSelect('This Month')">This Month</a></li>
 											<li><a class="dropdown-item" href="#" t-on-click="() => this.onDateFilterSelect('This Quarter')">This Quarter</a></li>
@@ -38,72 +40,166 @@
 										</ul>
 									</div>
 								</div>
-								<div class="flex-grow-1">
-									<div class="dropdown">
-										<button class="btn button-secondary btn-lg" type="button" id="customerDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="width: 100%; height: auto;">
-											Customer : <span t-esc="state.customerNameHeader"/>
-										</button>
-										<ul class="dropdown-menu" aria-labelledby="customerDropdown" style="width: 100%;">
-											<li>
-												<a class="dropdown-item" href="#" t-on-click="() => this.onCustomerSelect('All')">
-													All
-												</a>
-											</li>
-											<t t-foreach="Object.keys(state.customerList)" t-as="customerId" t-key="customerId">
-												<li>
-													<a class="dropdown-item" href="#" t-on-click="() => this.onCustomerSelect(customerId)">
-														<t t-esc="state.customerList[customerId]"/>
-													</a>
-												</li>
+								<div class="col-md-6 col-lg-3 mb-2 mb-lg-2">
+									<div class="multi-select-dropdown customer-dropdown position-relative" t-on-click.stop="" t-ref="customerDropdown">
+										<div class="btn btn-lg button-secondary d-flex justify-content-center align-items-center" t-on-click="onClickCustomerOption">
+											<div class="selected-text">
+												<span>Customer:
+													<t t-if="state.selectedCustomers.length === 0">
+														All
+													</t>
+													<t t-if="state.selectedCustomers.length === 1">
+														<t t-esc="state.selectedCustomers[0].name"/>
+													</t>
+													<t t-if="state.selectedCustomers.length > 1">
+														<t t-esc="state.selectedCustomers.length"/> selected
+													</t>
+												</span>
+											</div>
+										</div>
+										<div t-if="state.isCustomerDropdownOpen" class="dropdown-menu show w-100 mt-1">
+											<div class="px-3 py-2">
+												<input type="text" class="form-control mb-2" placeholder="Search customers..." 
+													t-on-input="(ev) => this.handleSearch('customers', ev)" 
+                                       				t-model="state.customerSearchText"/>
+												<div class="d-flex justify-content-between align-items-start flex-column flex-md-row align-items-md-center">
+													<div class="fw-bold cursor-pointer text-theme-primary" t-on-click="() => this.selectAll('customers')">
+														SELECT ALL
+													</div>
+													<div class="fw-bold cursor-pointer text-theme-primary" t-on-click="() => this.clearAllFilters('customers')">
+														CLEAR
+													</div>
+												</div>
+												<div class="dropdown-divider"></div>
+												<div class="dropdown-items-container" style="max-height: 300px; overflow-y: auto;">
+													<t t-foreach="state.filteredCustomers" t-as="customer" t-key="customer.id">
+														<div class="dropdown-item d-flex align-items-center" t-on-click="() => this.toggleOption('Customers', customer)">
+															<div class="d-flex align-items-center gap-2">
+																<input type="checkbox" class="form-check-input" t-att-id="'customer-' + customer.id" t-att-checked="isSelected('Customers', customer)" style="width: 16px; height: 16px; margin-top: 0;"/>
+																<label class="form-check-label" t-att-for="'customer-' + customer.id">
+																	<t t-esc="customer.name"/>
+																</label>
+															</div>
+														</div>
+													</t>
+												</div>
+											</div>
+											<t t-if="state.filteredCustomers.length > 0">
+												<div class="dropdown-divider"></div>
+												<div class="px-3">
+													<span><t t-esc="state.selectedCustomers.length"/> of <t t-esc="state.filteredCustomers.length"/></span>
+												</div>
 											</t>
-										</ul>
+										</div>	
 									</div>
 								</div>
-								<div class="flex-grow-1">
-									<div class="dropdown">
-										<button class="btn button-secondary btn-lg" type="button" id="productDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="width: 100%; height: auto;">
-											Product : <span t-esc="state.productNameHeader"/>
-										</button>
-										<ul class="dropdown-menu" aria-labelledby="productDropdown" style="width: 100%;">
-											<li>
-												<a class="dropdown-item" href="#" t-on-click="() => this.onProductSelect('All')">
-													All
-												</a>
-											</li>
-											<t t-foreach="Object.keys(state.productList)" t-as="productId" t-key="productId">
-												<li>
-													<a class="dropdown-item" href="#" t-on-click="() => this.onProductSelect(productId)">
-														<t t-esc="state.productList[productId]"/>
-													</a>
-												</li>
+								<div class="col-md-6 col-lg-3 mb-2 mb-lg-0">
+									<div class="multi-select-dropdown product-dropdown position-relative" t-on-click.stop="" t-ref="productDropdown">
+										<div class="btn btn-lg button-secondary d-flex justify-content-center align-items-center" t-on-click="onClickProductOption">
+											<div class="selected-text">
+												<span>Product:
+													<t t-if="state.selectedProducts.length === 0">
+														All
+													</t>
+													<t t-if="state.selectedProducts.length === 1">
+														<t t-esc="state.selectedProducts[0].name"/>
+													</t>
+													<t t-if="state.selectedProducts.length > 1">
+														<t t-esc="state.selectedProducts.length"/> selected
+													</t>
+												</span>
+											</div>
+										</div>
+										<div t-if="state.isProductDropdownOpen" class="dropdown-menu show w-100 mt-1">
+											<div class="px-3 py-2">
+												<input type="text" class="form-control mb-2" placeholder="Search products..." 
+													t-on-input="(ev) => this.handleSearch('products', ev)" 
+                                       				t-model="state.productSearchText"/>
+												<div class="d-flex justify-content-between align-items-start flex-column flex-md-row align-items-md-center">
+													<div class="fw-bold cursor-pointer text-theme-primary" t-on-click="() => this.selectAll('products')">
+														SELECT ALL
+													</div>
+													<div class="fw-bold cursor-pointer text-theme-primary" t-on-click="() => this.clearAllFilters('products')">
+														CLEAR
+													</div>
+												</div>
+												<div class="dropdown-divider"></div>
+												<div class="dropdown-items-container" style="max-height: 300px; overflow-y: auto;">
+													<t t-foreach="state.filteredProducts" t-as="product" t-key="product.id">
+														<div class="dropdown-item d-flex align-items-center" t-on-click="() => this.toggleOption('Products', product)">
+															<div class="d-flex align-items-center gap-2">
+																<input type="checkbox" class="form-check-input" t-att-id="'product-' + product.id" t-att-checked="isSelected('Products', product)" style="width: 16px; height: 16px; margin-top: 0;"/>
+																<label class="form-check-label" t-att-for="'product-' + product.id">
+																	<t t-esc="product.name"/>
+																</label>
+															</div>
+														</div>
+													</t>
+												</div>
+											</div>
+											<t t-if="state.filteredProducts.length > 0">
+												<div class="dropdown-divider"></div>
+												<div class="px-3">
+													<span><t t-esc="state.selectedProducts.length"/> of <t t-esc="state.filteredProducts.length"/></span>
+												</div>
 											</t>
-										</ul>
+										</div>	
 									</div>
 								</div>
-								<div class="flex-grow-1">
-									<div class="dropdown">
-										<button class="btn button-secondary btn-lg" type="button" id="categoryDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="width: 100%; height: auto;">
-											Category : <span t-esc="state.productCategoryNameHeader"/>
-										</button>
-										<ul class="dropdown-menu" aria-labelledby="categoryDropdown" style="width: 100%;">
-											<li>
-												<a class="dropdown-item" href="#" t-on-click="() => this.onProductCategorySelect('-')">
-													-
-												</a>
-											</li>
-											<t t-foreach="Object.keys(state.productCategoryList)" t-as="categoryId" t-key="categoryId">
-												<li>
-													<a class="dropdown-item" href="#" t-on-click="() => this.onProductCategorySelect(categoryId)">
-														<t t-esc="state.productCategoryList[categoryId]"/>
-													</a>
-												</li>
+								<div class="col-md-6 col-lg-3 mb-2 mb-lg-0">
+									<div class="multi-select-dropdown category-dropdown position-relative" t-on-click.stop="" t-ref="categoryDropdown">
+										<div class="btn btn-lg button-secondary d-flex justify-content-center align-items-center" t-on-click="onClickProductCategoryOption">
+											<div class="selected-text">
+												<span>Category:
+													<t t-if="state.selectedProductCategories.length === 0">
+														All
+													</t>
+													<t t-if="state.selectedProductCategories.length === 1">
+														<t t-esc="state.selectedProductCategories[0].name"/>
+													</t>
+													<t t-if="state.selectedProductCategories.length > 1">
+														<t t-esc="state.selectedProducts.length"/> selected
+													</t>
+												</span>
+											</div>
+										</div>
+										<div t-if="state.isProductCategoryDropdownOpen" class="dropdown-menu show w-100 mt-1">
+											<div class="px-3 py-2">
+												<input type="text" class="form-control mb-2" placeholder="Search categories..." 
+													t-on-input="(ev) => this.handleSearch('productCategories', ev)" 
+                                       				t-model="state.productCategorySearchText"/>
+												<div class="d-flex justify-content-between align-items-start flex-column flex-md-row align-items-md-center">
+													<div class="fw-bold cursor-pointer text-theme-primary" t-on-click="() => this.selectAll('productCategories')">
+														SELECT ALL
+													</div>
+													<div class="fw-bold cursor-pointer text-theme-primary" t-on-click="() => this.clearAllFilters('productCategories')">
+														CLEAR
+													</div>
+												</div>
+												<div class="dropdown-divider"></div>
+												<div class="dropdown-items-container" style="max-height: 300px; overflow-y: auto;">
+													<t t-foreach="state.filteredProductCategories" t-as="productCategory" t-key="productCategory.id">
+														<div class="dropdown-item d-flex align-items-center" t-on-click="() => this.toggleOption('ProductCategories', productCategory)">
+															<div class="d-flex align-items-center gap-2">
+																<input type="checkbox" class="form-check-input" t-att-id="'productCategory-' + productCategory.id" t-att-checked="isSelected('ProductCategories', productCategory)" style="width: 16px; height: 16px; margin-top: 0;"/>
+																<label class="form-check-label" t-att-for="'productCategory-' + productCategory.id">
+																	<t t-esc="productCategory.name"/>
+																</label>
+															</div>
+														</div>
+													</t>
+												</div>
+											</div>
+											<t t-if="state.filteredProductCategories.length > 0">
+												<div class="dropdown-divider"></div>
+												<div class="px-3">
+													<span><t t-esc="state.selectedProductCategories.length"/> of <t t-esc="state.filteredProductCategories.length"/></span>
+												</div>
 											</t>
-										</ul>
+										</div>	
 									</div>
 								</div>
 							</div>
-						</div>
-					</div>
 					<div class="row mb-3">
 						<div class="col-md-4 mb-md-0 mb-3">
 							<KPI name="'Total Validated Sale Order'" value="state.totalSalesValidatedAmount" />
@@ -157,7 +253,7 @@
 										<button class="btn btn-sm ms-2" t-att-class="{'button-outline-primary': !state.isQtyActive, 'button-primary': state.isQtyActive}" t-on-click="filterByQty">Quantity</button>
 									</div>
 								</div>
-								<div id="top-3-sales-by-product" style="height: 85%; width: 100%;"></div>
+								<div id="top-3-sales-by-product" class="top-sales-by-product"></div>
 							</div>
 						</div>
 					</div>

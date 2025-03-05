@@ -12,7 +12,7 @@ class SalesDashboard(models.Model):
     _description = 'Sales Dashboard'
 
     
-    def get_sales_performance_data(self, date_from, date_to, customer_id=None, product_id=None, product_category_id=None):
+    def get_sales_performance_data(self, date_from, date_to, customer_ids=[], product_ids=[], product_category_ids=[]):
         query = """
             SELECT 
                 so.date_order::date as date,
@@ -48,20 +48,25 @@ class SalesDashboard(models.Model):
             WHERE so.date_order::date BETWEEN %s AND %s AND sol.company_id = %s
         """
         params = [date_from, date_to, self.env.user.company_id.id]
-        if product_id:
-            query += " AND pt.id = %s"
-            params.append(product_id)
-        if customer_id:
-            query += " AND rp.id = %s"
-            params.append(int(customer_id))
-        if product_category_id:
+        if len(product_ids) > 0:
+            query += " AND pt.id IN %s"
+            params.append(tuple(product_ids))
+        if len(customer_ids) > 0:
+            query += " AND rp.id IN %s"
+            params.append(tuple(customer_ids))
+        if len(product_category_ids) > 0:
             # If a product category is specified, include all its child categories in the search
-            child_category_ids = self.env['product.category'].search([('id', 'child_of', int(product_category_id))]).ids + [int(product_category_id)]
+            child_category_ids = []
+            for category in product_category_ids:
+                # Get all child categories for each specified category
+                category_with_children = self.env['product.category'].search([('id', 'child_of', int(category))]).ids
+                child_category_ids.extend(category_with_children)
+            # Add the original categories if not already included
+            for category in product_category_ids:
+                if int(category) not in child_category_ids:
+                    child_category_ids.append(int(category))
             query += " AND pc.id IN %s"
             params.append(tuple(child_category_ids))
-        
-        # Debugging: Log the query and parameters to check for issues
-        _logger.debug("Executing query: %s with params: %s", query, params)
         
         self._cr.execute(query, tuple(params))
         res = self._cr.dictfetchall()
