@@ -31,9 +31,9 @@ export class DashboardHomepage extends Component {
             roiData: null
         });
         onMounted(async () => {
-            await this.graph.renderLineCharts(this.state.salesPurchaseEvolution);
+            await this.graph.renderLineCharts(this.state.salesPurchaseEvolution, this.options ? this.options.options.date.filter : this.dashboardController.options.date.filter);
             await this.graph.renderSingleLineChart(this.state.roiData,"#roi_chart");
-            await this.graph.renderComboCharts(this.state.stockCrmDistribution);
+            await this.graph.renderComboCharts(this.state.stockCrmDistribution, this.options ? this.options.options.date.filter : this.dashboardController.options.date.filter);
             await this.graph.renderPieCharts(this.state.categoryBreakdownDataPurchase, "#purchase_breakdown");
             await this.graph.renderPieCharts(this.state.categoryBreakdownDataSales, "#sales_breakdown");
             await this.graph.renderSankeyDiagram();
@@ -63,9 +63,9 @@ export class DashboardHomepage extends Component {
             await this.getCategoryBreakdownDataSales();
             await this.getStockCrmDistribution();
             await this.getRoiData();
-            await this.graph.renderLineCharts(this.state.salesPurchaseEvolution);
+            await this.graph.renderLineCharts(this.state.salesPurchaseEvolution, this.options.options.date.filter);
             await this.graph.renderSingleLineChart(this.state.roiData,"#roi_chart");
-            await this.graph.renderComboCharts(this.state.stockCrmDistribution);
+            await this.graph.renderComboCharts(this.state.stockCrmDistribution, this.options.options.date.filter);
             await this.graph.renderPieCharts(this.state.categoryBreakdownDataPurchase, "#purchase_breakdown");
             await this.graph.renderPieCharts(this.state.categoryBreakdownDataSales, "#sales_breakdown");
         }
@@ -93,7 +93,7 @@ export class DashboardHomepage extends Component {
             await rpc("/web/dataset/call_kw/universal.dashboard/get_sales_purchase_evolution", {
                 model: "universal.dashboard",
                 method: "get_sales_purchase_evolution",
-                args: [options.date.period_type, options.date.date_from, options.date.date_to],
+                args: [options.date.date_from, options.date.date_to],
                 kwargs: {}
             }).then(res => {
                 this.state.salesPurchaseEvolution = res;
@@ -109,11 +109,10 @@ export class DashboardHomepage extends Component {
             await rpc("/web/dataset/call_kw/universal.dashboard/get_stock_crm_distribution", {
                 model: "universal.dashboard",
                 method: "get_stock_crm_distribution",
-                args: [options.date.period_type, options.date.date_from, options.date.date_to],
+                args: [options.date.date_from, options.date.date_to],
                 kwargs: {}
             }).then(res => {
                 this.state.stockCrmDistribution = res;
-                console.log(this.state.stockCrmDistribution);
             });
         } catch (error) {
             console.log(error);

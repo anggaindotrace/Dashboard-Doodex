@@ -39,8 +39,21 @@ export class Graph{
      *   ...
      * ]
      */
-    async renderLineCharts(data) {
+    async renderLineCharts(data, filter) {
       const root = await this.initChart("#sales_purchase_evolution");
+      var timeUnit;
+      if(filter.includes('month')){
+        timeUnit = { timeUnit: "day", count: 1 };
+      }
+      else if(filter.includes('quarter')){
+        timeUnit = { timeUnit: "week", count: 1 };
+      }
+      else if(filter.includes('year')){
+        timeUnit = { timeUnit: "month", count: 1 };
+      } else {
+        timeUnit = { timeUnit: "day", count: 1 };
+      }
+
       var chart = root.container.children.push( 
         am5xy.XYChart.new(root, {
           panY: false,
@@ -66,19 +79,37 @@ export class Graph{
       
       // Create X-Axis
       var xAxis = chart.xAxes.push(
-        am5xy.CategoryAxis.new(root, {
-          categoryField: "period",
+        am5xy.DateAxis.new(root, {
+          baseInterval: timeUnit,
           renderer: am5xy.AxisRendererX.new(root, {
-            minGridDistance: 20
+            minorGridEnabled: true,
+            minGridDistance: 70
           }),
           tooltip: am5.Tooltip.new(root, {})
         })
       );
+
       xAxis.get("renderer").grid.template.setAll({
         strokeWidth: 0,
         visible: false
       });
       xAxis.data.setAll(data);
+
+      var tooltipSeries = am5.Tooltip.new(root, {
+        pointerOrientation: "horizontal",
+        labelText: "{name} : {valueY} {info}",
+        getFillFromSprite: false,
+        autoTextColor: false,
+      });
+
+      tooltipSeries.get("background").setAll({
+        fill: am5.color("#008080"),
+        fillOpacity: 1
+      });
+
+      tooltipSeries.label.setAll({
+        fill: am5.color("#fff")
+      });
       
       // Create series
       
@@ -88,15 +119,9 @@ export class Graph{
           xAxis: xAxis,
           yAxis: yAxis,
           valueYField: "sales",
-          categoryXField: "period",
-          legendLabelText: "{name}: {categoryX}",
-          legendRangeLabelText: "{name}",
-          tooltip: am5.Tooltip.new(root, {
-            pointerOrientation: "horizontal",
-            labelText: "{name} in {categoryX}: {valueY} {info}"
-          }),
+          valueXField: "date",
           stroke: "#008080",
-          fill: "#008080"
+          tooltip: tooltipSeries
         })
       );
       
@@ -111,28 +136,36 @@ export class Graph{
             radius: 6,
             stroke: root.interfaceColors.get("background"),
             strokeWidth: 2,
-            fill: series.get("fill")
+            fill: series.get("stroke")
           })
         });
       });
-        
-      series.data.setAll(data);
 
+      var tooltipSeries2 = am5.Tooltip.new(root, {
+        pointerOrientation: "horizontal",
+        labelText: "{name} : {valueY} {info}",
+        getFillFromSprite: false,
+        autoTextColor: false,
+      });
+
+      tooltipSeries2.get("background").setAll({
+        fill: am5.color("#F4D06F"),
+        fillOpacity: 1
+      });
+
+      tooltipSeries2.label.setAll({
+        fill: am5.color("#fff")
+      });
+     
       var series2 = chart.series.push(
         am5xy.SmoothedXLineSeries.new(root, {
           name: "Purchase",
           xAxis: xAxis,
           yAxis: yAxis,
           valueYField: "purchase",
-          categoryXField: "period",
-          legendLabelText: "{name}: {categoryX}",
-          legendRangeLabelText: "{name}",
-          tooltip: am5.Tooltip.new(root, {
-            pointerOrientation: "horizontal",
-            labelText: "{name} in {categoryX}: {valueY} {info}",
-          }),
-          stroke: "#F4D06F",
-          fill: "#F4D06F"
+          valueXField: "date",
+          tooltip: tooltipSeries2,
+          stroke: "#F4D06F"
         })
       );
 
@@ -151,12 +184,11 @@ export class Graph{
             radius: 6,
             stroke: root.interfaceColors.get("background"),
             strokeWidth: 2,
-            fill: series2.get("fill")
+            fill: series2.get("stroke")
           })
         });
       });
-
-      series2.data.setAll(data);
+            
       // Add cursor
       chart.set("cursor", am5xy.XYCursor.new(root, {
         behavior: "zoomX",
@@ -168,11 +200,84 @@ export class Graph{
         centerX: am5.p50,
         x: am5.p50
       }));
+
+      series.data.processor = am5.DataProcessor.new(root, {
+        dateFormat: "yyyy-MM-dd",
+        dateFields: ["date"]
+      });
+
+      series2.data.processor = am5.DataProcessor.new(root, {
+        dateFormat: "yyyy-MM-dd",
+        dateFields: ["date"]
+      });
+
+      var processedData = data;
+
+      if(filter.includes('quarter') || filter.includes('year')){
+        processedData = roundData(processData(data, filter));
+      }
+
+      series.data.setAll(processedData);
+      series2.data.setAll(processedData);
       legend.data.setAll(chart.series.values);
+
+      series.appear(1000);
+      series2.appear(1000);
+      chart.appear(1000, 100);
+      function processData(data, filter){
+        return data.reduce((acc, item) => {
+          let date = new Date(item.date);
+          let periodKey;
+  
+          if (filter.includes('quarter')) {
+              // Set tanggal ke hari Senin awal minggu
+              let weekStart = new Date(date);
+              weekStart.setDate(date.getDate() - date.getDay() + 1); // Set ke Senin
+              weekStart.setHours(0, 0, 0, 0);
+              periodKey = weekStart.getTime(); // Gunakan timestamp awal minggu
+          } else if (filter.includes('year')) {
+              // Format "YYYY-MM" sebagai key
+              periodKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+          }
+  
+          if (!acc[periodKey]) {
+              acc[periodKey] = {
+                  date: periodKey,
+                  sales: 0,
+                  purchase: 0
+              };
+          }
+  
+          // Agregasi jumlah
+          acc[periodKey].sales += item.sales;
+          acc[periodKey].purchase += item.purchase;
+          return acc;
+      }, {});
+      }
+      function roundData(aggregatedData){
+        return Object.values(aggregatedData).map(entry => ({
+              date: entry.date,
+              sales: parseFloat(entry.sales.toFixed(2)),
+              purchase: parseFloat(entry.purchase.toFixed(2))
+          }));
+      }
     }
 
-    async renderComboCharts(data) {
+    async renderComboCharts(data, filter) {
         const root = await this.initChart("#distribution");
+
+        var timeUnit;
+        if(filter.includes('month')){
+          timeUnit = { timeUnit: "day", count: 1 };
+        }
+        else if(filter.includes('quarter')){
+          timeUnit = { timeUnit: "week", count: 1 };
+        }
+        else if(filter.includes('year')){
+          timeUnit = { timeUnit: "month", count: 1 };
+        } else {
+          timeUnit = { timeUnit: "day", count: 1 };
+        }
 
         var chart = root.container.children.push(
             am5xy.XYChart.new(root, {
@@ -184,25 +289,30 @@ export class Graph{
               layout: root.verticalLayout
             })
           );
+
+          var processedData = data;
+          if(filter.includes('quarter') || filter.includes('year')){
+            processedData = roundData(processData(data, filter));
+          }
           
           // Create axes
           // https://www.amcharts.com/docs/v5/charts/xy-chart/axes/
-          var xRenderer = am5xy.AxisRendererX.new(root, {
-            minorGridEnabled: true,
-            minGridDistance: 60
-          });
           var xAxis = chart.xAxes.push(
-            am5xy.CategoryAxis.new(root, {
-              categoryField: "period",
-              renderer: xRenderer,
+            am5xy.DateAxis.new(root, {
+              baseInterval: timeUnit,
+              renderer: am5xy.AxisRendererX.new(root, {
+                minorGridEnabled: true,
+                minGridDistance: 70
+              }),
               tooltip: am5.Tooltip.new(root, {})
             })
           );
-          xRenderer.grid.template.setAll({
+
+          xAxis.get("renderer").grid.template.setAll({
             location: 1
           })
           
-          xAxis.data.setAll(data);
+          xAxis.data.setAll(processedData);
           
           //Left Axis
           var yAxis = chart.yAxes.push(
@@ -239,7 +349,7 @@ export class Graph{
                 xAxis: xAxis,
                 yAxis: yAxis,
                 valueYField: fieldName,
-                categoryXField: "period",
+                valueXField: "date",
                 tooltip: am5.Tooltip.new(root, {
                   pointerOrientation: "horizontal",
                   labelText: "{name} in {categoryX}: {valueY} {info}"
@@ -253,8 +363,13 @@ export class Graph{
               tooltipY: am5.percent(10),
               templateField: "columnSettings"
             });
+
+            series.data.processor = am5.DataProcessor.new(root, {
+              dateFormat: "yyyy-MM-dd",
+              dateFields: ["date"]
+            });
             
-            series.data.setAll(data);
+            series.data.setAll(processedData);
             series.appear();
           } 
           
@@ -267,7 +382,7 @@ export class Graph{
               xAxis: xAxis,
               yAxis: yAxis2,
               valueYField: "bfr",
-              categoryXField: "period",
+              valueXField: "date",
               tooltip: am5.Tooltip.new(root, {
                 pointerOrientation: "horizontal",
                 labelText: "{name} in {categoryX}: {valueY} {info}"
@@ -282,8 +397,12 @@ export class Graph{
             templateField: "strokeSettings"
           });
           
-          
-          series2.data.setAll(data);
+          series2.data.processor = am5.DataProcessor.new(root, {
+            dateFormat: "yyyy-MM-dd",
+            dateFields: ["date"]
+          });
+
+          series2.data.setAll(processedData);
           
           series2.bullets.push(function () {
             return am5.Bullet.new(root, {
@@ -313,6 +432,53 @@ export class Graph{
           // Make stuff animate on load
           // https://www.amcharts.com/docs/v5/concepts/animations/
           chart.appear(1000, 100);
+          function processData(data, filter){
+            return data.reduce((acc, item) => {
+              let date = new Date(item.date);
+              let periodKey;
+      
+              if (filter.includes('quarter')) {
+                  // Set tanggal ke hari Senin awal minggu
+                  let weekStart = new Date(date);
+                  weekStart.setDate(date.getDate() - date.getDay() + 1); // Set ke Senin
+                  weekStart.setHours(0, 0, 0, 0);
+                  periodKey = weekStart.getTime(); // Gunakan timestamp awal minggu
+              } else if (filter.includes('year')) {
+                  // Format "YYYY-MM" sebagai key
+                  periodKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+              }
+      
+              if (!acc[periodKey]) {
+                  acc[periodKey] = {
+                      date: periodKey,
+                      stock_valuation: 0,
+                      crm: 0,
+                      bfr: 0,
+                      lastDate: new Date(0)
+                  };
+              }
+      
+              // Agregasi jumlah crm karena bersifat individual
+              acc[periodKey].crm += item.crm;
+
+              //mempertahankan tanggal terakhir untuk menghitung bfr dan stock valuation karena bersifat cumulative
+              const itemDate = new Date(item.date);
+              if (itemDate > acc[periodKey].lastDate) {
+                  acc[periodKey].lastDate = itemDate;
+                  acc[periodKey].stock_valuation = item.stock_valuation;
+                  acc[periodKey].bfr = item.bfr;
+              }
+              return acc;
+            }, {});
+          }
+          function roundData(aggregatedData){
+            return Object.values(aggregatedData).map(entry => ({
+                  date: entry.date,
+                  stock_valuation: parseFloat(entry.stock_valuation.toFixed(2)),
+                  crm: parseFloat(entry.crm.toFixed(2)),
+                  bfr: parseFloat(entry.bfr.toFixed(2))
+              }));
+          }
     }
 
     generateSeriesData(resultData, series) {

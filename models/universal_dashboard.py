@@ -183,12 +183,12 @@ class UniversalDashboard(models.Model):
         query = '''
             SELECT value
             FROM stock_valuation_layer
-            WHERE create_date BETWEEN %s AND %s
+            WHERE create_date <= %s
             AND company_id = %s
         '''
         company_id = self.env.company.id
         if date_from and date_to:
-            results = self._execute_query(query, (date_from, date_to, company_id))
+            results = self._execute_query(query, (date_to, company_id))
         else:
             results = self._execute_query(query, (company_id,))
 
@@ -378,7 +378,7 @@ class UniversalDashboard(models.Model):
         return data
 
     @api.model
-    def get_sales_purchase_evolution(self, period_type: str, date_from: datetime = None, date_to: datetime = None) -> Dict[str, float]:
+    def get_sales_purchase_evolution(self, date_from: datetime = None, date_to: datetime = None) -> Dict[str, float]:
         """
             Get the sales and purchase evolution for a given date range
 
@@ -390,55 +390,45 @@ class UniversalDashboard(models.Model):
         Returns:
             Dict[str, float]: The sales and purchase evolution
         """
-        period_units = {
-            'month': 'DAY',
-            'quarter': 'WEEK',
-            'year': 'MONTH'
-        }
-    
-        period_unit = period_units.get(period_type)
-        if not period_unit:
-            raise ValueError(f"Invalid period_type: {period_type}")
-
         company_id = self.env.company.id
 
         purchase_query = f'''
             SELECT 
-                EXTRACT({period_unit} FROM date_approve) AS period,
+                DATE(date_approve) AS date,
                 SUM(amount_total) AS amount
             FROM purchase_order
             WHERE state = 'purchase' 
             AND date_approve BETWEEN %s AND %s
             AND company_id = %s
-            GROUP BY period
-            ORDER BY period
+            GROUP BY date
+            ORDER BY date
         '''
         purchase_data = self._execute_query(purchase_query, (date_from, date_to, company_id))
 
         sales_query = f'''
             SELECT 
-                EXTRACT({period_unit} FROM date_order) AS period,
+                DATE(date_order) AS date,
                 SUM(amount_total) AS amount
             FROM sale_order
             WHERE state = 'sale' AND date_order BETWEEN %s AND %s
             AND company_id = %s
-            GROUP BY period
-            ORDER BY period
+            GROUP BY date
+            ORDER BY date
         '''
         sales_data = self._execute_query(sales_query, (date_from, date_to, company_id))
-        sales_dict = {item['period']: item['amount'] for item in sales_data}
-        purchase_dict = {item['period']: item['amount'] for item in purchase_data}
-        all_periods = set(sales_dict.keys()) | set(purchase_dict.keys())
+        sales_dict = {item['date']: item['amount'] for item in sales_data}
+        purchase_dict = {item['date']: item['amount'] for item in purchase_data}
+        all_dates = set(sales_dict.keys()) | set(purchase_dict.keys())
         merged_data = [{
-            'period': period,
-            'purchase': purchase_dict.get(period, 0),
-            'sales': sales_dict.get(period, 0)
-        } for period in sorted(all_periods)]
+            'date': date,
+            'purchase': purchase_dict.get(date, 0),
+            'sales': sales_dict.get(date, 0)
+        } for date in sorted(all_dates)]
 
         return merged_data
 
     @api.model
-    def get_stock_crm_distribution(self, period_type: str, date_from: datetime = None, date_to: datetime = None) -> Dict[str, float]:
+    def get_stock_crm_distribution(self, date_from: datetime = None, date_to: datetime = None) -> Dict[str, float]:
         """
             Get the stock and crm distribution for a given date range
 
@@ -450,81 +440,85 @@ class UniversalDashboard(models.Model):
         Returns:
             Dict[str, float]: The stock and crm distribution, as well as BFR
         """
-        period_units = {
-            'month': 'DAY',
-            'quarter': 'WEEK',
-            'year': 'MONTH'
-        }
-    
-        period_unit = period_units.get(period_type)
-        if not period_unit:
-            raise ValueError(f"Invalid period_type: {period_type}")
-
         company_id = self.env.company.id
-
-        stock_valuation_breakdown = f'''
-            SELECT 
-                EXTRACT({period_unit} FROM create_date) AS period,
-                SUM(value) AS total_stock_valuation
-            FROM stock_valuation_layer
-            WHERE create_date <= %s
-            AND company_id = %s
-            GROUP BY period
-            ORDER BY period
-        '''
-        stock_valuation_data = self._execute_query(stock_valuation_breakdown, (date_to, company_id))
 
         crm_breakdown = f'''
             SELECT 
-                EXTRACT({period_unit} FROM so.date_order) AS period,
+                DATE(so.date_order) AS date,
                 SUM(so.amount_total) AS number_of_opportunities
             FROM crm_lead cl
             INNER JOIN sale_order so ON so.opportunity_id = cl.id
             WHERE cl.won_status = 'won' AND so.date_order BETWEEN %s AND %s AND cl.company_id = %s
-            GROUP BY period
-            ORDER BY period
+            GROUP BY date
+            ORDER BY date
         '''
         crm_data = self._execute_query(crm_breakdown, (date_from, date_to, company_id))
 
         receivables_breakdown = f'''
             SELECT
-                EXTRACT({period_unit} FROM aml.date) AS period,
-                SUM(aml.balance) AS receivables
+                aml.date,
+                SUM(SUM(aml.balance)) OVER (ORDER BY aml.date) AS cumulative_receivables
             FROM account_move_line aml
             INNER JOIN account_account aa ON aml.account_id = aa.id
             INNER JOIN account_move am ON aml.move_id = am.id
             WHERE aa.account_type IN ('asset_receivable') 
             AND am.company_id = %s
             AND aml.date BETWEEN %s AND %s
-            GROUP BY period
-            ORDER BY period
+            GROUP BY aml.date
+            ORDER BY aml.date
         '''
         receivables_data = self._execute_query(receivables_breakdown, (company_id, date_from, date_to))
 
         payables_breakdown = f'''
             SELECT 
-                EXTRACT({period_unit} FROM aml.date) AS period,
-                SUM(aml.balance) AS payables
+                aml.date,
+                SUM(SUM(aml.balance)) OVER (ORDER BY aml.date) AS cumulative_payables
             FROM account_move_line aml
             INNER JOIN account_account aa ON aml.account_id = aa.id
             INNER JOIN account_move am ON aml.move_id = am.id
             WHERE aa.account_type IN ('liability_payable') AND am.company_id = %s AND aml.date BETWEEN %s AND %s
-            GROUP BY period
-            ORDER BY period
+            GROUP BY aml.date
+            ORDER BY aml.date
         '''
         payables_data = self._execute_query(payables_breakdown, (company_id, date_from, date_to))
-        stock_valution_dict = {item['period']: item['total_stock_valuation'] for item in stock_valuation_data}
-        crm_dict = {item['period']: item['number_of_opportunities'] for item in crm_data}
-        receivables_dict = {item['period']: item['receivables'] for item in receivables_data}
-        payables_dict = {item['period']: item['payables'] for item in payables_data}
 
-        common_periods = set(stock_valution_dict.keys()) | set(crm_dict.keys()) | set(receivables_dict.keys()) | set(payables_dict.keys())
-        merged_data = [{
-            'period': period,
-            'stock_valuation': stock_valution_dict.get(period, 0),
-            'crm': crm_dict.get(period, 0),
-            'bfr': receivables_dict.get(period, 0) + stock_valution_dict.get(period, 0) - payables_dict.get(period, 0)
-        } for period in sorted(common_periods)]
+        all_dates = set()
+        for item in receivables_data:
+            all_dates.add(item['date'])
+        for item in payables_data:
+            all_dates.add(item['date'])
+        for item in crm_data:
+            all_dates.add(item['date'])
+
+        crm_dict = {item['date']: item['number_of_opportunities'] for item in crm_data}
+        receivables_dict = {item['date']: item['cumulative_receivables'] for item in receivables_data}
+        payables_dict = {item['date']: item['cumulative_payables'] for item in payables_data}
+
+        merged_data = []
+        for date in sorted(all_dates):
+            # Get stock valuation for this specific date
+            stock_valuation_query = f'''
+                SELECT 
+                    SUM(value) AS total_stock_valuation
+                FROM stock_valuation_layer
+                WHERE DATE(create_date) <= %s
+                AND company_id = %s
+            '''
+            stock_valuation_data = self._execute_query(stock_valuation_query, (date, company_id))
+            stock_valuation = stock_valuation_data[0]['total_stock_valuation'] if stock_valuation_data and stock_valuation_data[0]['total_stock_valuation'] else 0
+            
+            # Calculate BFR for this date
+            bfr = receivables_dict.get(date, 0) + stock_valuation - payables_dict.get(date, 0)
+            
+            merged_data.append({
+                'date': date,
+                'stock_valuation': stock_valuation,
+                'receivables': receivables_dict.get(date, 0),
+                'payables': payables_dict.get(date, 0),
+                'crm': crm_dict.get(date, 0),
+                'bfr': bfr
+            })
+
         return merged_data
 
     
