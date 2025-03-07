@@ -202,13 +202,13 @@
 							</div>
 					<div class="row mb-3">
 						<div class="col-md-4 mb-md-0 mb-3">
-							<KPI name="'Total Validated Sale Order'" value="state.totalSalesValidatedAmount" />
+							<KPI onClick.bind="onClickValidatedSalesOrder" name="'Total Validated Sale Order'" value="state.totalSalesValidatedAmount" />
 						</div>
 						<div class="col-md-4 mb-md-0 mb-3">
-							<KPI name="'Total Validated Invoice'" value="state.totalValidatedInvoice" />
+							<KPI onClick.bind="onClickValidatedInvoice" name="'Total Validated Invoice'" value="state.totalValidatedInvoice" />
 						</div>
 						<div class="col-md-4">
-							<KPI name="'Total Overdue Invoice'" value="state.totalOverdueInvoice" />
+							<KPI onClick.bind="onClickTotalOverdueInvoice" name="'Total Overdue Invoice'" value="state.totalOverdueInvoice" />
 						</div>
 					</div>
 					<div class="row mb-4">

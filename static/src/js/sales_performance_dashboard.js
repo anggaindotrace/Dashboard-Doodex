@@ -2,9 +2,11 @@
 
 import { Component, useState, useRef, onMounted, onWillStart } from "@odoo/owl";
 import { registry } from "@web/core/registry";
+import { useService } from "@web/core/utils/hooks";
 import { rpc } from "@web/core/network/rpc";
 import { KPI } from "@Dashboard-Doodex/components/KPIs/kpi";
 import { Graph } from "@Dashboard-Doodex/components/graph";
+const { DateTime } = luxon;
 
 export class SalesPerformanceDashboard extends Component {
     static template = "SalesPerformanceDashboard";
@@ -14,6 +16,8 @@ export class SalesPerformanceDashboard extends Component {
     
     setup() {
         this.root = useRef("root");
+        this.action = useService("action");
+        this.orm = useService("orm");
         this.customerDropdownRef = useRef("customerDropdown");
         this.productDropdownRef = useRef("productDropdown");
         this.categoryDropdownRef = useRef("categoryDropdown");
@@ -26,8 +30,8 @@ export class SalesPerformanceDashboard extends Component {
             totalOverdueInvoice: 0,
             averageSaleOrder: 0,
             top3ProductsBySales: [],
-            dateFrom: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
-            dateTo: new Date().toISOString().split('T')[0],
+            dateFrom: DateTime.now().startOf('month').toISODate(),
+            dateTo: DateTime.now().endOf('month').toISODate(),
             dateFilterHeader: "This Month",
             isValueActive: true,
             isQtyActive: false,
@@ -284,7 +288,6 @@ export class SalesPerformanceDashboard extends Component {
 
     async onCustomerSelect() {
         await this.getSalesPerformanceData();
-        console.log(this.state.saleTemporalAnalysis)
         await this.graph.renderTopSellingProducts(this.state.top3ProductsBySales, this.state.isValueActive ? 'value' : 'quantity');
         await this.graph.renderBarChart(this.state.totalAmountBySalesperson, '#revenue-by-salesperson');
         await this.graph.renderCombinationChart(this.state.saleTemporalAnalysis,'#sales-temporal-analysis', this.state.dateFilterHeader);
@@ -373,11 +376,14 @@ export class SalesPerformanceDashboard extends Component {
         
         // Group by invoice_id first
         const invoiceGroups = salesPerformanceData.reduce((groups, sale) => {
-            if (sale.invoice_id && sale.invoice_state === 'posted') {
-                if (!groups[sale.invoice_id]) {
-                    groups[sale.invoice_id] = {
-                        invoice_amount_residual: sale.invoice_amount_residual
-                    };
+            if (sale.invoice_id && sale.invoice_state === 'posted' && sale.invoice_date_due) {
+                const dueDate = new Date(sale.invoice_date_due);
+                if (dueDate < today) {
+                    if (!groups[sale.invoice_id]) {
+                        groups[sale.invoice_id] = {
+                            invoice_amount_residual: sale.invoice_amount_residual
+                        };
+                    }
                 }
             }
             return groups;
@@ -401,9 +407,20 @@ export class SalesPerformanceDashboard extends Component {
         if (!salesPerformanceData) {
             return 0;
         }
-        const total = salesPerformanceData
-            .filter(sale => sale.invoice_state === 'posted')
-            .reduce((total, sale) => total + sale.invoice_amount, 0);
+        const invoiceGroups = salesPerformanceData.reduce((groups, sale) => {
+            if (sale.invoice_id && sale.invoice_state === 'posted') {
+                if (!groups[sale.invoice_id]) {
+                    groups[sale.invoice_id] = {
+                        invoice_amount: sale.invoice_amount
+                    };
+                }
+            }
+            return groups;
+        }, {});
+
+        // Sum up amounts from grouped invoices
+        const total = Object.values(invoiceGroups)
+            .reduce((total, invoice) => total + invoice.invoice_amount, 0);
         return total.toLocaleString('en-US', {
             style: 'currency', 
             currency: this.state.currency.currency_name,
@@ -792,6 +809,75 @@ export class SalesPerformanceDashboard extends Component {
         } catch (error) {
             console.log(error);
         }
+    }
+
+    async onClickValidatedSalesOrder() {
+
+        let listView = await this.orm.searchRead("ir.model.data", [["name", "=", "sale_order_list_upload"]], ["res_id"])
+
+        this.action.doAction({
+            type: "ir.actions.act_window",
+            name: "Validated Sales Orders",
+            res_model: "sale.order",
+            views: [
+                [listView.length > 0 ? listView[0].res_id : false, "list"],
+                [false, "form"]
+            ],
+            domain: [
+                ["state", "=", "sale"],
+                ["date_order", ">=", this.state.dateFrom],
+                ["date_order", "<=", this.state.dateTo]
+            ],
+            target: "current"
+        })
+    }
+
+    async onClickValidatedInvoice() {
+        let listView = await this.orm.searchRead("ir.model.data", [["name", "=", "view_out_invoice_tree"]], ["res_id"])
+
+        this.action.doAction({
+            type: "ir.actions.act_window",
+            name: "Validated Invoices",
+            res_model: "account.move",
+            views: [
+                [listView.length > 0 ? listView[0].res_id : false, "list"],
+                [false, "form"]
+            ],
+            domain: [
+                ["state", "=", "posted"],
+                ["move_type", "=", "out_invoice"],
+                ["invoice_origin", "!=", false],
+                "&",
+                    ["invoice_line_ids.sale_line_ids.order_id.date_order", ">=", this.state.dateFrom],
+                    ["invoice_line_ids.sale_line_ids.order_id.date_order", "<=", this.state.dateTo]
+            ],
+            target: "current"
+        })
+    }
+
+    async onClickTotalOverdueInvoice() {
+        let listView = await this.orm.searchRead("ir.model.data", [["name", "=", "view_out_invoice_tree"]], ["res_id"])
+
+        this.action.doAction({
+            type: "ir.actions.act_window",
+            name: "Total Overdue Invoice",
+            res_model: "account.move",
+            views: [
+                [listView.length > 0 ? listView[0].res_id : false, "list"],
+                [false, "form"]
+            ],
+            domain: [
+                ["state", "=", "posted"],
+                ["move_type", "=", "out_invoice"],
+                ["invoice_origin", "!=", false],
+                ["payment_state", "in", ["not_paid", "partial"]],
+                ["invoice_date_due", "<", DateTime.now().toISODate()],
+                "&",
+                    ["invoice_line_ids.sale_line_ids.order_id.date_order", ">=", this.state.dateFrom],
+                    ["invoice_line_ids.sale_line_ids.order_id.date_order", "<=", this.state.dateTo]
+            ],
+            target: "current"
+        })
     }
 }
 

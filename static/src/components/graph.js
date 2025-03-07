@@ -634,7 +634,6 @@ export class Graph{
         
             // Format number as monetary (1.002,400)
             const formattedTotalAmountSum = totalAmountSum.toLocaleString("id-ID", { minimumFractionDigits: 2 });
-            console.log(dataContext);
             // Open a modal that shows the product names and total amounts in a table
             let modalContent = `
               <div style="margin-bottom: 10px; font-weight: bold;">
@@ -1006,7 +1005,6 @@ export class Graph{
         if(!filter.includes('Month')){
           processedData = roundData(processData(data, filter));
         }
-        console.log(processedData);
         series1.data.setAll(processedData);
         series2.data.setAll(processedData);
 
@@ -1405,9 +1403,7 @@ export class Graph{
               data = [];
           }
       }
-      console.log("data", data);
       const root = await this.initChart("#top-3-sales-by-product");
-      console.log("root", root);
       var chart = root.container.children.push(
           am5xy.XYChart.new(root, {
               panY: false,
