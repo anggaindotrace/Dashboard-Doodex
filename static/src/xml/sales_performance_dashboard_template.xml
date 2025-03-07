@@ -5,7 +5,7 @@
 		</div>
 		<div class="next-dashboard" t-on-click="onGlobalClick">
 			<div class="py-3" t-ref="root">
-				<div class="mx-3">
+				<div class="mx-3" id="sales-performance-dashboard">
 					<div class="row mb-2">
 						<div class="col" style="padding: 0 1rem !important;">
 							<div class="oe-border">
@@ -282,7 +282,7 @@
 						</div>
 					</div>
 					<div class="row">
-						<div class="col-lg-6 ps-lg-3">
+						<div class="col-lg-6 ps-lg-3 mb-3 mb-lg-0">
 							<div class="oe-border">
 								<div class="d-flex flex-column gap-2">
 									<span class="dashboard-card-title fw-bold fs-2">
