@@ -1559,4 +1559,327 @@ export class Graph{
 
       chart.appear(1000, 100);
   }
+  
+  async renderMultiLineChart(data, referenceId, filter){
+    const root = await this.initChart(referenceId);
+
+    var timeUnit;
+    if(filter.includes('Month')){
+      timeUnit = { timeUnit: "day", count: 1 };
+    }
+    else if(filter.includes('Quarter')){
+      timeUnit = { timeUnit: "week", count: 1 };
+    }
+    else if(filter.includes('Year')){
+      timeUnit = { timeUnit: "month", count: 1 };
+    } else {
+      timeUnit = { timeUnit: "day", count: 1 };
+    }
+
+    var chart = root.container.children.push( 
+      am5xy.XYChart.new(root, {
+        panY: false,
+        wheelY: "none",
+        layout: root.verticalLayout,
+        maxTooltipDistance: 0
+      }) 
+    );
+
+    chart.get("colors").set("colors", [
+      am5.color("#B5918C"),
+      am5.color("#205353"),
+      am5.color("#01B8B8"),
+      am5.color("#549D95"),
+      am5.color("#F7B501"),
+      am5.color("#CC6300"),
+      am5.color("#2C0039"),
+      am5.color("#C748F4"),
+      am5.color("#ED335F"),
+      am5.color("#F9858B"),
+      
+    ])
+
+    var processedData = data;
+    if(filter.includes('Quarter') || filter.includes('Year')){
+      processedData = roundData(processData(data, filter));
+    }
+
+    var cursor = chart.set(
+      "cursor",
+      am5xy.XYCursor.new(root, {
+        behavior: "none"
+      })
+    );
+    cursor.lineY.set("visible", false);
+
+    //Create X-Axis for dates
+    var xAxis = chart.xAxes.push(
+      am5xy.DateAxis.new(root, {
+        baseInterval: timeUnit,
+        renderer: am5xy.AxisRendererX.new(root, {
+          minorGridEnabled: true,
+          minGridDistance: 70
+        }),
+        tooltip: am5.Tooltip.new(root, {})
+      })
+    );
+
+    xAxis.get("renderer").grid.template.setAll({
+      location: 1
+    })
+    
+    xAxis.data.setAll(processedData);
+    
+    //Left Axis
+    var yAxis = chart.yAxes.push(
+      am5xy.ValueAxis.new(root, {
+        min: 0,
+        extraMax: 0.1,
+        renderer: am5xy.AxisRendererY.new(root, {
+          strokeOpacity: 0.1
+        })
+      })
+    );
+
+    function makeLineSeries(name, fieldName){
+      var series = chart.series.push(
+        am5xy.SmoothedXLineSeries.new(root, {
+          name: name,
+          xAxis: xAxis,
+          yAxis: yAxis,
+          valueYField: fieldName,
+          valueXField: "date",
+          tooltip: am5.Tooltip.new(root, {
+            pointerOrientation: "horizontal",
+            labelText: "{name} in {categoryX}: {valueY} {info}",
+          })
+        })
+      );
+
+      series.data.processor = am5.DataProcessor.new(root, {
+        dateFormat: "yyyy-MM-dd",
+        dateFields: ["date"]
+      });
+
+      series.strokes.template.setAll({
+        strokeWidth: 4,
+      });
+      
+      series.data.setAll(processedData);
+
+      series.bullets.push(function () {
+        return am5.Bullet.new(root, {
+          locationY: 0,
+          sprite: am5.Circle.new(root, {
+            radius: 6,
+            stroke: root.interfaceColors.get("background"),
+            strokeWidth: 2,
+            fill: series.get("fill")
+          }),
+        });
+      });
+
+      series.appear();
+    }
+
+    if(processedData.length > 0){
+      Object.keys(processedData[0]).forEach(key => {
+        if (key !== 'date') {
+          // Format the category name (capitalize first letter)
+          const categoryName = key.charAt(0).toUpperCase() + key.slice(1);
+          // Create a line series for this category
+          makeLineSeries(categoryName, key);
+        }
+      });
+    }
+    
+    chart.set("cursor", am5xy.XYCursor.new(root, {
+      behavior: "zoomX",
+      
+    }));
+    chart.zoomOutButton.set("forceHidden", true);
+    
+    var legend = chart.children.push(am5.Legend.new(root, {
+      centerX: am5.p50,
+      x: am5.p50
+    }));
+
+    legend.data.setAll(chart.series.values);
+
+    chart.appear(1000, 100);
+    function processData(data, filter){
+      if(data.length === 0){
+        return [];
+      }
+
+      const fields = Object.keys(data[0]).filter(key => key !== 'date');
+
+      return data.reduce((acc, item) => {
+        let date = new Date(item.date);
+        let periodKey;
+
+        if (filter.includes('Quarter')) {
+            // Set tanggal ke hari Senin awal minggu
+            let weekStart = new Date(date);
+            weekStart.setDate(date.getDate() - date.getDay() + 1); // Set ke Senin
+            weekStart.setHours(0, 0, 0, 0);
+            periodKey = weekStart.getTime(); // Gunakan timestamp awal minggu
+        } else if (filter.includes('Year')) {
+            // Format "YYYY-MM" sebagai key
+            periodKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        }
+
+        if (!acc[periodKey]) {
+            acc[periodKey] = {
+                date: periodKey
+            };
+            // Initialize all data fields with 0
+            fields.forEach(field => {
+              acc[periodKey][field] = 0;
+            });
+        }
+
+        // Agregasi jumlah
+        fields.forEach(field => {
+          acc[periodKey][field] += item[field];
+        });
+        return acc;
+      }, {});
+    }
+    function roundData(aggregatedData){
+     if(aggregatedData.length === 0){
+      return [];
+     }
+
+    const firstEntry = Object.values(aggregatedData)[0];
+    const fields = Object.keys(firstEntry).filter(key => key !== 'date');
+    
+    return Object.values(aggregatedData).map(entry => {
+      // Start with the date field
+      const roundedEntry = {
+        date: entry.date
+      };
+      
+      // Round all numeric fields
+      fields.forEach(field => {
+        roundedEntry[field] = parseFloat(entry[field].toFixed(2));
+      });
+
+      return roundedEntry;
+    });
+     
+    }
+  }
+
+  async renderCategoryChart(data, referenceId){
+    const root = await this.initChart(referenceId);
+
+    var chart = root.container.children.push(
+      am5xy.XYChart.new(root, {
+        focusable: true,
+        panX: true,
+        panY: true,
+        wheelX: "panX",
+        wheelY: "zoomX",
+        pinchZoomX: true,
+        paddingBottom: 50
+      })
+    );
+    
+    chart.get("colors").set("colors", [
+      am5.color("#004040"),
+      am5.color("#008080"),
+      am5.color("#01B8B8")
+    ])
+    
+    var legend = chart.children.push(
+      am5.Legend.new(root, {
+        centerX: am5.p50,
+        x: am5.p50,
+        y: am5.p100
+      })
+    );
+    
+    var xRenderer = am5xy.AxisRendererX.new(root, {
+      cellStartLocation: 0.1,
+      cellEndLocation: 0.9,
+      minorGridEnabled: true
+    })
+    
+    var xAxis = chart.xAxes.push(am5xy.CategoryAxis.new(root, {
+      categoryField: "supplier",
+      renderer: xRenderer,
+      tooltip: am5.Tooltip.new(root, {})
+    }));
+    
+    xRenderer.grid.template.setAll({
+      location: 1
+    })
+    
+    xAxis.data.setAll(data);
+    
+    function createAxisAndSeries(name, fieldName, opposite, labelText) {
+      var yRenderer = am5xy.AxisRendererY.new(root, {
+        opposite: opposite
+      });
+      var yAxis = chart.yAxes.push(
+        am5xy.ValueAxis.new(root, {
+          maxDeviation: 1,
+          renderer: yRenderer
+        })
+      );
+    
+      if (chart.yAxes.indexOf(yAxis) > 0) {
+        yAxis.set("syncWithAxis", chart.yAxes.getIndex(0));
+      }
+    
+      // Add series
+      // https://www.amcharts.com/docs/v5/charts/xy-chart/series/
+      var series = chart.series.push(am5xy.ColumnSeries.new(root, {
+        name: name,
+        xAxis: xAxis,
+        yAxis: yAxis,
+        valueYField: fieldName,
+        categoryXField: "supplier"
+      }));
+    
+     series.columns.template.setAll({
+        tooltipText: "{name}, {categoryX}:{valueY}",
+        width: am5.percent(90),
+        tooltipY: 0,
+        strokeOpacity: 0
+      });
+    
+      series.data.setAll(data);
+    
+      // Make stuff animate on load
+      // https://www.amcharts.com/docs/v5/concepts/animations/
+      series.appear();
+      series.bullets.push(function () {
+        return am5.Bullet.new(root, {
+          locationY: 0,
+          sprite: am5.Label.new(root, {
+            text: "{valueY}",
+            fill: root.interfaceColors.get("alternativeText"),
+            centerY: 0,
+            centerX: am5.p50,
+            populateText: true
+          })
+        });
+      });
+      yRenderer.grid.template.set("strokeOpacity", 0.05);
+      yRenderer.labels.template.set("fill", series.get("fill"));
+      yRenderer.setAll({
+        stroke: series.get("fill"),
+        strokeOpacity: 1,
+        opacity: 1
+      });
+      legend.data.push(series);
+    }
+    
+    createAxisAndSeries("Cost", "cost", false, "test")
+    createAxisAndSeries("Lead Time", "leadTime", true, "test")
+    createAxisAndSeries("Quality", "quality", true, "test")
+    chart.appear(1000, 100);
+  }
 }

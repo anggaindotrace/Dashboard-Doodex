@@ -15,13 +15,14 @@
     'sequence': -1,
 
     # any module necessary for this one to work correctly
-    'depends': ['base', 'crm', 'sale_management', 'account', 'stock', 'purchase', 'account_reports'],
+    'depends': ['base', 'crm', 'sale_management', 'account', 'stock', 'purchase', 'account_reports', 'quality_control'],
 
     # always loaded
     'data': [
         'security/ir.model.access.csv',
         'views/sales_performance_dashboard_views.xml',
         'views/dashboard_homepage_views.xml',
+        'views/purchase_performance_dashboard_views.xml',
         'views/menu_items.xml'
     ],
     'assets': {

@@ -1,0 +1,192 @@
+<?xml version='1.0' encoding='utf-8'?>
+<templates id="purchase_performance_dashboard_template">
+    <t t-name="PurchasePerformanceDashboard">
+        <div class="separator">
+        </div>
+        <div class="next-dashboard" t-on-click="onGlobalClick">
+            <div class="py-3" t-ref="root">
+                <div class="mx-3" id="purchase-performance-dashboard">
+                    <div class="row mb-2">
+                        <div class="col" style="padding: 0 1rem !important;">
+                            <div class="oe-border">
+                                <span class="oe-header-title">
+                                    Purchase Performance Dashboard
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mb-4">
+						<div class="col-md-4 mb-2 mb-lg-0">
+							<div class="dropdown">
+								<div class="btn button-secondary btn-lg" type="button" id="dateDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="width: 100%; height: auto;">
+									Period : <span t-esc="state.dateFilterHeader"/>
+								</div>
+								<ul class="dropdown-menu" aria-labelledby="dateDropdown" style="width: 100%;">
+									<li><a class="dropdown-item" href="#" t-on-click="() => this.onDateFilterSelect('This Month')">This Month</a></li>
+									<li><a class="dropdown-item" href="#" t-on-click="() => this.onDateFilterSelect('This Quarter')">This Quarter</a></li>
+									<li><a class="dropdown-item" href="#" t-on-click="() => this.onDateFilterSelect('This Financial Year')">This Financial Year</a></li>
+									<li><a class="dropdown-item" href="#" t-on-click="() => this.onDateFilterSelect('Last Month')">Last Month</a></li>
+									<li><a class="dropdown-item" href="#" t-on-click="() => this.onDateFilterSelect('Last Quarter')">Last Quarter</a></li>
+									<li><a class="dropdown-item" href="#" t-on-click="() => this.onDateFilterSelect('Last Financial Year')">Last Financial Year</a></li>
+									<li class="dropdown-divider"></li>
+									<li class="px-3">
+										<div class="d-flex justify-content-between align-items-center gap-2">
+											<input id="dateFrom" type="date" class="form-control" t-att-value="state.dateFrom"/>
+											<span>to</span>
+											<input id="dateTo" type="date" class="form-control" t-att-value="state.dateTo"/>
+											<button class="btn button-primary" t-on-click="() => this.onDateFilterSelect('Custom')">Apply</button>
+										</div>
+									</li>
+								</ul>
+							</div>
+						</div>
+                        <div class="col-md-4 mb-2 mb-lg-0">
+                            <div class="multi-select-dropdown category-dropdown position-relative" t-on-click.stop="" t-ref="productCategoryDropdown">
+                                <div class="btn btn-lg button-secondary d-flex justify-content-center align-items-center" t-on-click="onClickProductCategoryOption">
+                                    <div class="selected-text">
+                                        <span>Category:
+                                            <t t-if="state.selectedProductCategories.length === 0">
+                                                All
+                                            </t>
+                                            <t t-if="state.selectedProductCategories.length === 1">
+                                                <t t-esc="state.selectedProductCategories[0].name"/>
+                                            </t>
+                                            <t t-if="state.selectedProductCategories.length > 1">
+                                                <t t-esc="state.selectedProductCategories.length"/> selected
+                                            </t>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div t-if="state.isProductCategoryDropdownOpen" class="dropdown-menu show w-100 mt-1">
+                                    <div class="px-3 py-2">
+                                        <input type="text" class="form-control mb-2" placeholder="Search categories..." 
+                                            t-on-input="(ev) => this.handleSearch('productCategories', ev)" 
+                                            t-model="state.productCategorySearchText"/>
+                                        <div class="d-flex justify-content-between align-items-start flex-column flex-md-row align-items-md-center">
+                                            <div class="fw-bold cursor-pointer text-theme-primary" t-on-click="() => this.selectAll('productCategories')">
+                                                SELECT ALL
+                                            </div>
+                                            <div class="fw-bold cursor-pointer text-theme-primary" t-on-click="() => this.clearAllFilters('productCategories')">
+                                                CLEAR
+                                            </div>
+                                        </div>
+                                        <div class="dropdown-divider"></div>
+                                        <div class="dropdown-items-container" style="max-height: 300px; overflow-y: auto;">
+                                            <t t-foreach="state.filteredProductCategories" t-as="productCategory" t-key="productCategory.id">
+                                                <div class="dropdown-item d-flex align-items-center" t-on-click="() => this.toggleOption('ProductCategories', productCategory)">
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <input type="checkbox" class="form-check-input" t-att-id="'productCategory-' + productCategory.id" t-att-checked="isSelected('ProductCategories', productCategory)" style="width: 16px; height: 16px; margin-top: 0;"/>
+                                                        <label class="form-check-label" t-att-for="'productCategory-' + productCategory.id">
+                                                            <t t-esc="productCategory.name"/>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            </t>
+                                        </div>
+                                    </div>
+                                    <t t-if="state.filteredProductCategories.length > 0">
+                                        <div class="dropdown-divider"></div>
+                                        <div class="px-3">
+                                            <span><t t-esc="state.selectedProductCategories.length"/> of <t t-esc="state.filteredProductCategories.length"/></span>
+                                        </div>
+                                    </t>
+                                </div>	
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-2 mb-lg-2">
+                            <div class="multi-select-dropdown supplier-dropdown position-relative" t-on-click.stop="" t-ref="supplierDropdown">
+                                <div class="btn btn-lg button-secondary d-flex justify-content-center align-items-center" t-on-click="onClickSupplierOption">
+                                    <div class="selected-text">
+                                        <span>Supplier:
+                                            <t t-if="state.selectedSuppliers.length === 0">
+                                                All
+                                            </t>
+                                            <t t-if="state.selectedSuppliers.length === 1">
+                                                <t t-esc="state.selectedSuppliers[0].name"/>
+                                            </t>
+                                            <t t-if="state.selectedSuppliers.length > 1">
+                                                <t t-esc="state.selectedSuppliers.length"/> selected
+                                            </t>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div t-if="state.isSupplierDropdownOpen" class="dropdown-menu show w-100 mt-1">
+                                    <div class="px-3 py-2">
+                                        <input type="text" class="form-control mb-2" placeholder="Search suppliers..." 
+                                            t-on-input="(ev) => this.handleSearch('suppliers', ev)" 
+                                            t-model="state.supplierSearchText"/>
+                                        <div class="d-flex justify-content-between align-items-start flex-column flex-md-row align-items-md-center">
+                                            <div class="fw-bold cursor-pointer text-theme-primary" t-on-click="() => this.selectAll('suppliers')">
+                                                SELECT ALL
+                                            </div>
+                                            <div class="fw-bold cursor-pointer text-theme-primary" t-on-click="() => this.clearAllFilters('suppliers')">
+                                                CLEAR
+                                            </div>
+                                        </div>
+                                        <div class="dropdown-divider"></div>
+                                        <div class="dropdown-items-container" style="max-height: 300px; overflow-y: auto;">
+                                            <t t-foreach="state.filteredSuppliers" t-as="supplier" t-key="supplier.id">
+                                                <div class="dropdown-item d-flex align-items-center" t-on-click="() => this.toggleOption('Suppliers', supplier)">
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <input type="checkbox" class="form-check-input" t-att-id="'supplier-' + supplier.id" t-att-checked="isSelected('Suppliers', supplier)" style="width: 16px; height: 16px; margin-top: 0;"/>
+                                                        <label class="form-check-label" t-att-for="'supplier-' + supplier.id">
+                                                            <t t-esc="supplier.name"/>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            </t>
+                                        </div>
+                                    </div>
+                                    <t t-if="state.filteredSuppliers.length > 0">
+                                        <div class="dropdown-divider"></div>
+                                        <div class="px-3">
+                                            <span><t t-esc="state.selectedSuppliers.length"/> of <t t-esc="state.filteredSuppliers.length"/></span>
+                                        </div>
+                                    </t>
+                                </div>	
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mb-4">
+                        <div class="col-md-6 col-lg-3 mb-md-3 mb-lg-0 mb-3">
+							<KPI name="'Total Purchase Volume'" value="state.totalPurchaseVolume" />
+						</div>
+                        <div class="col-md-6 col-lg-3 mb-md-3 mb-lg-0 mb-3">
+							<KPI name="'Average Lead Time'" value="state.avarageLeadTime" />
+						</div>
+                        <div class="col-md-6 col-lg-3 mb-md-3 mb-3">
+							<KPI name="'On-Time in-Full (OTIF) Delivery Rate'" value="state.otifDeliveryRate" />
+						</div>
+                        <div class="col-md-6 col-lg-3 mb-md-0 mb-3">
+							<KPI name="'Average Cost of Delivered Products'" value="state.averageCostPerUnit" />
+						</div>
+                    </div>
+                    <div class="row mb-4">
+                        <div class="col px-lg-3">
+							<div class="oe-border">
+								<div class="d-flex flex-column gap-2">
+									<span class="dashboard-card-title fw-bold fs-2">
+										Purchase Trends by Product Category
+									</span>
+									<div id="purchase-trends-by-product-category" style="height: 477px; width: 100%;"></div>
+								</div>
+							</div>
+						</div>
+                    </div>
+                    <div class="row mb-4">
+                        <div class="col px-lg-3">
+							<div class="oe-border">
+								<div class="d-flex flex-column gap-2">
+									<span class="dashboard-card-title fw-bold fs-2">
+										Supplier Performance
+									</span>
+									<div id="supplier-performance" style="height: 477px; width: 100%;"></div>
+								</div>
+							</div>
+						</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+</templates>
